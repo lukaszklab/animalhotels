@@ -20,7 +20,7 @@
   }
   header{position:absolute; inset:16px 16px auto 16px; display:flex; align-items:center; gap:12px;
     padding:10px 14px; border-radius:14px; background:rgba(255,255,255,.04); backdrop-filter: blur(6px);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); z-index:1000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); z-index:20;
   }
   .diamond{width:26px;height:26px;border:2px solid var(--brand);transform:rotate(45deg);border-radius:4px; position:relative;}
   .diamond::after{content:""; position:absolute; inset:-2px; border:2px solid var(--brand2); border-top:0;border-left:0; border-radius:4px;}
@@ -32,7 +32,7 @@
 
   #board{position:absolute; inset:0}
 
-  .phone{position:absolute; z-index:10; left:50%; top:50%; transform:translate(-50%,-50%); width:min(230px, 38vw); height:min(420px, 65vh);
+  .phone{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(230px, 38vw); height:min(420px, 65vh);
     border-radius:28px; background:linear-gradient(180deg,#0b1224,#0a1328);
     box-shadow:0 12px 30px rgba(2,8,23,.6), inset 0 0 0 2px rgba(255,255,255,.06);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -78,11 +78,7 @@
   .muted{opacity:.6}
 
   /* HUD rozszerzony */
-  .hud{position:absolute; left:50%; transform:translateX(-50%); top:14px; display:flex; gap:8px; z-index:15 z-index: 100; }
-  /* DOLNY HUD */
-  .bottom-hud{position:absolute; left:12px; right:12px; bottom:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center;
-    padding:8px 10px; border-radius:14px; background:rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); z-index:16}
-
+  .hud{position:absolute; left:50%; transform:translateX(-50%); top:14px; display:flex; gap:8px; z-index:15}
   .hud .badge{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); font-weight:700}
   .badge.combo.hot{background:rgba(251, 113, 133, .12); border-color:rgba(251, 113, 133, .35)}
   .badge.double{background:rgba(250, 204, 21, .12); border-color:rgba(250, 204, 21, .38)}
@@ -112,7 +108,7 @@
     /* Keep only time + score */
     .stats .pill:nth-child(3), .stats .pill:nth-child(4) { display: none; }
     .ctrls .btn { padding: 4px 6px; font-size: 12px; }
-    .hud { top: calc(8px + env(safe-area-inset-top, 0px));  z-index: 100; }
+    .hud { top: calc(8px + env(safe-area-inset-top, 0px)); }
     .phone { width: min(300px, 78vw); height: min(520px, 74vh); }
     .entity { font-size: 30px; padding: 8px 10px; }
     .card { width: min(560px, 92vw); padding: 16px; }
@@ -134,23 +130,20 @@
   @media (max-height: 580px), (max-width: 520px) {
     header { padding: 3px 5px; gap: 4px; border-radius: 10px; }
     .pill { padding: 2px 5px; font-size: 10px; }
-    .ctrls { display:flex; } /* hide buttons when very small */
-    .hud { top: calc(6px + env(safe-area-inset-top, 0px));  z-index: 100; }
+    .ctrls { display:none; } /* hide buttons when very small */
+    .hud { top: calc(6px + env(safe-area-inset-top, 0px)); }
   }
-
-
-  .help-top{position:absolute; left:12px; right:12px; top:58px; padding:8px 10px; border-radius:12px;
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); z-index:900; font-size:12px; text-align:center}
 
 </style>
 </head>
 <body>
-<div class="hud">
-      <div class="badge combo" id="comboBadge">Combo x1</div>
   <div class="game" id="game">
     <header>
       <div class="diamond" aria-hidden="true"></div>
-      <div class="title">Animalhotels: Smile & Match</div><div class="pill">✨ Punkty: <span id="score">0</span></div>
+      <div class="title">Animalhotels: Smile & Match</div>
+      <div class="stats">
+        <div class="pill">⏱️ <span id="time">60</span>s</div>
+        <div class="pill">✨ Punkty: <span id="score">0</span></div>
         <div class="pill">📦 Zebrano: <span id="collected">0</span></div>
         <div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
       </div>
@@ -160,9 +153,9 @@
         <button class="btn" id="showLB">🏆 Ranking</button>
       </div>
     </header>
-    <div class="help-top">Sterowanie: przeciągaj elementy do telefonu. Match działa tylko dla zgodnych par. 💎 daje ×2 punkty na kilka sekund.</div>
 
-    
+    <div class="hud">
+      <div class="badge combo" id="comboBadge">Combo x1</div>
       <div class="badge double" id="doubleBadge" style="display:none;">×2 punkty: <span id="doubleLeft">0</span>s</div>
     </div>
 
@@ -232,14 +225,6 @@
     <footer class="help">
       Sterowanie: przeciągaj elementy myszką lub palcem do telefonu. Różne zwierzęta mają różną wartość. Zbieraj 💎 Diamond Token, żeby przez chwilę mieć ×2 punkty. Utrzymuj szybkie tempo, by rosnął mnożnik combo.
     </footer>
-    <!-- DOLNY HUD: przeniesione statystyki -->
-    <div class="bottom-hud" id="bottomHud">
-      <div class="pill">⏱️ <span id="time">60</span>s</div>
-      <div class="pill">✨ Punkty: <span id="score">0</span></div>
-      <div class="pill">📦 Zebrano: <span id="collected">0</span></div>
-      <div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
-    </div>
-
   </div>
 
 <script>
