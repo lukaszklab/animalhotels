@@ -233,6 +233,21 @@
   const nameInput = document.getElementById('nameInput');
 
   const levelSel = document.getElementById('levelSel');
+  // === Difficulty selection (robust) ===
+  const levelChips = Array.from(levelSel.querySelectorAll('.chip'));
+  function selectLevel(id){
+    const L = LEVELS[id] ? id : 'easy';
+    levelChips.forEach(c => c.classList.toggle('active', c.dataset.id === L));
+    chosen = L;
+    applyLevel(L);
+  }
+  levelChips.forEach(chip => {
+    chip.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      selectLevel(chip.dataset.id);
+    });
+  });
+
   const levelDesc = document.getElementById('levelDesc');
   const startBtn = document.getElementById('startBtn');
   const viewLB = document.getElementById('viewLB');
@@ -326,6 +341,9 @@
     levelDesc.textContent = L.desc;
   }
   applyLevel(chosen);
+  // sync with UI 'active' chip on load
+  const _activeChip = document.querySelector('#levelSel .chip.active');
+  if(_activeChip) { chosen = _activeChip.dataset.id; applyLevel(chosen); }
 
   // Spawn
   function spawnEntity(type){
@@ -504,7 +522,15 @@
   function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
   // Handlers
-  startBtn.addEventListener('click', ()=>{ applyLevel(chosen); start(); });
+  startBtn.addEventListener('click', ()=>{ 
+  const active = levelSel.querySelector('.chip.active');
+  if(active) { chosen = active.dataset.id; }
+  applyLevel(chosen);
+  // sync with UI 'active' chip on load
+  const _activeChip = document.querySelector('#levelSel .chip.active');
+  if(_activeChip) { chosen = _activeChip.dataset.id; applyLevel(chosen); }
+  start();
+});
   playAgainBtn.addEventListener('click', ()=>{ start(); });
   shareBtn.addEventListener('click', async ()=>{
     const text = `Gram w Animalhotels: Smile & Match — wynik ${score} (poziom ${difficulty}), max combo ${comboMultiplier()}×, zebrane ${collected}! 😄`;
