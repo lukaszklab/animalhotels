@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Animalhotels: Happy Matches</title>
+  <style>
+    html, body { margin:0; padding:0; background:#0e0f12; height:100%; }
+    #game { width:100vw; height:100vh; touch-action:none; }
+    .hud {
+      position: fixed; left: 0; right: 0; top: 0; padding: 10px 12px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: #fff; pointer-events: none; display:flex; gap:12px; align-items:center;
+    }
+    .bar {
+      flex:1; height:14px; background:#2a2d35; border-radius:8px; overflow:hidden; box-shadow:0 0 0 1px #3a3f49 inset;
+    }
+    .fill { height:100%; width:100%; background:linear-gradient(90deg,#22d3ee,#34d399); transition:width .15s ease; }
+    .stat { font-weight:600; font-size:14px; }
+    .badge { font-size:12px; opacity:.85 }
+    .btn {
+      position: fixed; right: 12px; bottom: 12px; padding:10px 14px; border-radius:10px; background:#1f2937; color:#fff;
+      border:1px solid #324154; font-weight:600; letter-spacing:.2px; cursor:pointer; user-select:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="stat">Score: <span id="score">0</span></div>
+    <div class="bar"><div id="happy" class="fill"></div></div>
+    <div class="badge">Carry: <span id="carry">—</span></div>
+  </div>
+  <div id="game"></div>
+  <button id="restart" class="btn" style="display:none">Restart</button>
+
+  <!-- Phaser 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script>
+  (() => {
+    const W = window.innerWidth, H = window.innerHeight;
+
+    // Simple palette
+    const COLORS = {
+      bg: 0x0e0f12,
+      player: 0x5eead4, // mint
+      sitter: 0xa78bfa, // purple
+      pet: 0xfdba74,    // orange
+      hub: 0x60a5fa,    // blue
+      text: '#ffffff'
+    };
+
+    const gameState = {
+      score: 0,
+      carrying: { sitter: false, pet: false },
+      happiness: 1.0, // 0..1
+      alive: true
+    };
+
+    // UI hooks
+    const scoreEl = document.getElementById('score');
+    const happyEl = document.getElementById('happy');
+    const carryEl = document.getElementById('carry');
+    const restartBtn = document.getElementById('restart');
+
+    function updateUI(){
+      scoreEl.textContent = gameState.score;
+      const items = [];
+      if (gameState.carrying.sitter) items.push('S');
+      if (gameState.carrying.pet) items.push('P');
+      carryEl.textContent = items.length ? items.join('+') : '—';
+      happyEl.style.width = Math.max(0, Math.min(1, gameState.happiness)) * 100 + '%';
+    }
+
+    class MainScene extends Phaser.Scene {
+      constructor(){ super('main'); }
+      preload(){}
+
+      create(){
+        this.cameras.main.setBackgroundColor(COLORS.bg);
+
+        // World bounds
+        const margin = 24;
+        this.worldRect = new Phaser.Geom.Rectangle(margin, margin, this.scale.width - margin*2, this.scale.height - margin*2);
+
+        // Physics
+        this.physics.world.setBounds(this.worldRect.x, this.worldRect.y, this.worldRect.width, this.worldRect.height);
+
+        // Player
+        this.player = this.add.circle(0,0,16, COLORS.player);
+        this.physics.add.existing(this.player);
+        this.player.body.setCollideWorldBounds(true);
+        this.player.x = this.scale.width/2; this.player.y = this.scale.height/2;
+        this.playerSpeed = 220;
+
+        // Hub (drop-off)
+        this.hub = this.add.star(this.scale.width*0.85, this.scale.height*0.2, 4, 16, 28, COLORS.hub);
+        this.physics.add.existing(this.hub, true);
+
+        // Groups
+        this.sitters = this.physics.add.group();
+        this.pets = this.physics.add.group();
+
+        // Overlaps
+        this.physics.add.overlap(this.player, this.sitters, (_, sitter) => {
+          if (!gameState.carrying.sitter) {
+            gameState.carrying.sitter = true;
+            sitter.destroy();
+            this.sfx('pickup');
+            updateUI();
+          }
+        });
+        this.physics.add.overlap(this.player, this.pets,   (_, pet) => {
+          if (!gameState.carrying.pet) {
+            gameState.carrying.pet = true;
+            pet.destroy();
+            this.sfx('pickup');
+            updateUI();
+          }
+        });
+        this.physics.add.overlap(this.player, this.hub, () => {
+          if (gameState.carrying.sitter && gameState.carrying.pet) {
+            // Successful match
+            gameState.carrying.sitter = false;
+            gameState.carrying.pet = false;
+            gameState.score += 1;
+            gameState.happiness = Math.min(1, gameState.happiness + 0.25);
+            this.flash(this.hub);
+            this.sfx('match');
+            updateUI();
+          }
+        });
+
+        // Spawn timers
+        this.time.addEvent({ delay: 1200, loop: true, callback: () => this.spawnItem('sitter') });
+        this.time.addEvent({ delay: 1400, loop: true, callback: () => this.spawnItem('pet') });
+
+        // Happiness drain
+        this.happyTimer = this.time.addEvent({
+          delay: 250, loop: true, callback: () => {
+            if (!gameState.alive) return;
+            // Drain scales a bit with score so the challenge ramps up
+            const drain = 0.01 + (gameState.score * 0.0015);
+            gameState.happiness -= drain;
+            if (gameState.happiness <= 0) this.gameOver();
+            updateUI();
+          }
+        });
+
+        // Input: pointer moves toward target
+        this.target = new Phaser.Math.Vector2(this.player.x, this.player.y);
+        this.input.on('pointerdown', p => { this.target.set(p.worldX, p.worldY); });
+        this.input.on('pointermove', p => { if (p.isDown) this.target.set(p.worldX, p.worldY); });
+
+        // Mobile-friendly camera deadzone scroll (not needed but nice)
+        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+        // Tiny audio beeps generated with WebAudio (no assets)
+        this.audioCtx = (this.sound.context) ? this.sound.context : null;
+
+        // Borders
+        this.drawFrame();
+
+        updateUI();
+      }
+
+      drawFrame(){
+        const g = this.add.graphics();
+        g.lineStyle(2, 0x22252b, 1);
+        g.strokeRect(this.worldRect.x, this.worldRect.y, this.worldRect.width, this.worldRect.height);
+      }
+
+      spawnItem(kind){
+        if (!gameState.alive) return;
+        // Cap spawns
+        if (kind === 'sitter' && this.sitters.getChildren().length > 8) return;
+        if (kind === 'pet'   && this.pets.getChildren().length   > 8) return;
+
+        const pad = 20;
+        const x = Phaser.Math.Between(this.worldRect.x+pad, this.worldRect.right-pad);
+        const y = Phaser.Math.Between(this.worldRect.y+pad, this.worldRect.bottom-pad);
+
+        if (kind === 'sitter') {
+          const s = this.add.triangle(x, y, 0,18, 9,0, 18,18, COLORS.sitter);
+          this.physics.add.existing(s);
+          s.body.setCircle(10, -1, -1);
+          s.body.setVelocity(Phaser.Math.Between(-30,30), Phaser.Math.Between(-30,30)).setBounce(1).setCollideWorldBounds(true);
+          this.sitters.add(s);
+        } else {
+          const p = this.add.rectangle(x, y, 18, 18, COLORS.pet);
+          this.physics.add.existing(p);
+          p.body.setVelocity(Phaser.Math.Between(-40,40), Phaser.Math.Between(-40,40)).setBounce(1).setCollideWorldBounds(true);
+          this.pets.add(p);
+        }
+      }
+
+      update(_, dt){
+        if (!gameState.alive) return;
+        // Move player toward target
+        const p = this.player;
+        const toTarget = new Phaser.Math.Vector2(this.target.x - p.x, this.target.y - p.y);
+        const dist = toTarget.length();
+        if (dist > 2) {
+          toTarget.normalize().scale(this.playerSpeed);
+          p.body.setVelocity(toTarget.x, toTarget.y);
+        } else {
+          p.body.setVelocity(0,0);
+        }
+      }
+
+      flash(obj){
+        this.tweens.add({ targets: obj, scale: 1.25, yoyo: true, duration: 120, ease: 'sine.inout', repeat: 1 });
+      }
+
+      sfx(type){
+        // Lightweight synth beeps
+        try {
+          const freq = (type === 'pickup') ? 660 : 440;
+          const dur = (type === 'pickup') ? 0.06 : 0.12;
+          const o = this.sound.add('beep'+Math.random());
+          // Fallback: quick oscillator via WebAudio
+          const ctx = this.sound.context || this.audioCtx;
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = freq;
+          gain.gain.value = 0.05;
+          osc.connect(gain).connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + dur);
+        } catch(e) {}
+      }
+
+      gameOver(){
+        gameState.alive = false;
+        this.player.body.setVelocity(0,0);
+        this.add.text(this.scale.width/2, this.scale.height/2, 'Game Over', { fontFamily:'system-ui, sans-serif', fontSize: '36px', color: '#ffffff' })
+          .setOrigin(0.5);
+        restartBtn.style.display = 'block';
+      }
+    }
+
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'game',
+      backgroundColor: COLORS.bg,
+      scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: W,
+        height: H
+      },
+      physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 0 }, debug: false }
+      },
+      scene: [MainScene]
+    };
+
+    let game = new Phaser.Game(config);
+
+    // Restart handling
+    restartBtn.addEventListener('click', () => {
+      restartBtn.style.display = 'none';
+      game.destroy(true);
+      // Reset state
+      gameState.score = 0;
+      gameState.carrying.sitter = false;
+      gameState.carrying.pet = false;
+      gameState.happiness = 1.0;
+      gameState.alive = true;
+      updateUI();
+      game = new Phaser.Game(config);
+    });
+
+    // Prevent touch scroll
+    document.getElementById('game').addEventListener('touchmove', e => e.preventDefault(), { passive:false });
+  })();
+  </script>
+</body>
+</html>
