@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Animalhotels: Smile & Match — Combos + Bonusy + Skins</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --brand:#22d3ee; --brand2:#a78bfa; --good:#22c55e; --text:#e5e7eb;
+    --ring-pet: var(--brand); --ring-sitter: var(--brand2);
+  }
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 700px at 70% -10%, #1f2937, #0b1023 60%, #0a0f1f);}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;}
+  .game{width:min(1000px, 96vw); height:min(640px, 90vh); position:relative; border-radius:18px; background:
+    radial-gradient(800px 400px at 20% 10%, rgba(34,211,238,0.08), transparent 60%),
+    radial-gradient(600px 300px at 80% 0%, rgba(167,139,250,0.08), transparent 60%),
+    var(--card);
+    box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+    overflow:hidden;
+  }
+  header{position:absolute; inset:16px 16px auto 16px; display:flex; align-items:center; gap:12px;
+    padding:10px 14px; border-radius:14px; background:rgba(255,255,255,.04); backdrop-filter: blur(6px);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); z-index:20;
+  }
+  .diamond{width:26px;height:26px;border:2px solid var(--brand);transform:rotate(45deg);border-radius:4px; position:relative;}
+  .diamond::after{content:""; position:absolute; inset:-2px; border:2px solid var(--brand2); border-top:0;border-left:0; border-radius:4px;}
+  .title{font-weight:700; letter-spacing:.2px}
+  .stats{margin-left:auto; display:flex; gap:10px; font-weight:600; flex-wrap:wrap}
+  .pill{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .ctrls{display:flex; gap:8px; align-items:center}
+  .btn{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.18);padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:700}
+
+  #board{position:absolute; inset:0}
+
+  .phone{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(230px, 38vw); height:min(420px, 65vh);
+    border-radius:28px; background:linear-gradient(180deg,#0b1224,#0a1328);
+    box-shadow:0 12px 30px rgba(2,8,23,.6), inset 0 0 0 2px rgba(255,255,255,.06);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    outline:2px dashed rgba(255,255,255,.12); outline-offset:-12px;
+  }
+  .phone .logo{display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; padding:12px}
+  .logo .diamond{width:34px;height:34px}
+  .logo h2{margin:0; font-size:18px; letter-spacing:.3px}
+  .logo p{margin:0; font-size:12px; opacity:.7}
+  .drop-hint{position:absolute; bottom:20px; font-size:12px; opacity:.75}
+
+  .entity{position:absolute; user-select:none; cursor:grab; touch-action:none; font-size:34px; padding:10px 14px; border-radius:12px;
+    background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 6px 18px rgba(2,8,23,.35);
+    display:flex; align-items:center; gap:8px; transition:transform .08s ease;
+  }
+  .entity.sitter{--ring: var(--ring-sitter);}
+  .entity.pet{--ring: var(--ring-pet);}
+  .entity.bonus{--ring: #f59e0b;}
+  .entity::after{content:""; position:absolute; inset:-3px; border-radius:14px; border:2px solid var(--ring); opacity:.7; pointer-events:none;}
+  .label{font-size:13px; opacity:.9}
+  .smile{margin-left:4px}
+  .grabbing{cursor:grabbing; transform:scale(1.03)}
+  .confetti{position:absolute; pointer-events:none; font-size:18px; will-change:transform,opacity;}
+
+  .overlay{position:absolute; inset:0; background:rgba(2,6,23,.6); display:none; align-items:center; justify-content:center; padding:20px; z-index:30}
+  .overlay.show{display:flex}
+  .card{background:linear-gradient(180deg,#0f1a33,#0c162b); border-radius:16px; padding:22px; width:min(680px, 96vw);
+    box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.06); text-align:center;}
+  .card h3{margin:0 0 8px 0}
+  .card p{margin:0 0 14px 0; opacity:.85}
+  .btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+  button{background:linear-gradient(180deg, #22d3ee, #0694b5); color:#041018; border:0; padding:10px 14px; border-radius:10px; font-weight:800;
+    box-shadow:0 6px 14px rgba(34,211,238,.35); cursor:pointer;}
+  button.secondary{background:transparent; color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.15)}
+  .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+  .select{display:flex; gap:6px; flex-wrap:wrap; justify-content:center}
+  .chip{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.18); cursor:pointer}
+  .chip.active{border-color:var(--brand); box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
+
+  .leadertable{width:100%; border-collapse:collapse; margin-top:8px; font-size:14px}
+  .leadertable th,.leadertable td{border-bottom:1px solid rgba(255,255,255,.1); padding:6px 8px; text-align:left}
+  .leadertable th{opacity:.8}
+  .muted{opacity:.6}
+
+  /* HUD rozszerzony */
+  .hud{position:absolute; left:50%; transform:translateX(-50%); top:14px; display:flex; gap:8px; z-index:15}
+  .hud .badge{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); font-weight:700}
+  .badge.combo.hot{background:rgba(251, 113, 133, .12); border-color:rgba(251, 113, 133, .35)}
+  .badge.double{background:rgba(250, 204, 21, .12); border-color:rgba(250, 204, 21, .38)}
+
+  /* Skins */
+  .skin-neon{--card:#070b16; --ring-pet:#3b82f6; --ring-sitter:#a855f7;}
+  .skin-neon .game{background:
+    radial-gradient(800px 400px at 20% 10%, rgba(59,130,246,0.10), transparent 60%),
+    radial-gradient(600px 300px at 80% 0%, rgba(168,85,247,0.10), transparent 60%),
+    var(--card);}
+
+  /* ==== Mobile-friendly layout tweaks ==== */
+  * { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body { overflow: hidden; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  /* Use JS-provided --vh for reliable viewport height inside in-app browsers */
+  .game { width: min(1000px, 100vw); height: calc(var(--vh, 1vh) * 100); }
+  @supports (height: 100dvh) {
+    .game { height: 100dvh; }
+  }
+  @media (max-width: 768px) {
+    .game { width: 100vw; height: 100dvh; border-radius: 0; }
+    header { inset: calc(6px + env(safe-area-inset-top, 0px)) 8px auto 8px; padding: 6px 8px; gap: 6px; border-radius: 12px; }
+    .title { display: none; }
+    .stats { gap: 6px; }
+    .pill { padding: 4px 6px; font-size: 12px; }
+    /* Keep only time + score */
+    .stats .pill:nth-child(3), .stats .pill:nth-child(4) { display: none; }
+    .ctrls .btn { padding: 4px 6px; font-size: 12px; }
+    .hud { top: calc(8px + env(safe-area-inset-top, 0px)); }
+    .phone { width: min(300px, 78vw); height: min(520px, 74vh); }
+    .entity { font-size: 30px; padding: 8px 10px; }
+    .card { width: min(560px, 92vw); padding: 16px; }
+  }
+
+</style>
+</head>
+<body>
+  <div class="game" id="game">
+    <header>
+      <div class="diamond" aria-hidden="true"></div>
+      <div class="title">Animalhotels: Smile & Match</div>
+      <div class="stats">
+        <div class="pill">⏱️ <span id="time">60</span>s</div>
+        <div class="pill">✨ Punkty: <span id="score">0</span></div>
+        <div class="pill">📦 Zebrano: <span id="collected">0</span></div>
+        <div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
+      </div>
+      <div class="ctrls">
+        <button class="btn" id="skinBtn">🎨 Motyw</button>
+        <button class="btn" id="muteBtn">🔊 Dźwięk</button>
+        <button class="btn" id="showLB">🏆 Ranking</button>
+      </div>
+    </header>
+
+    <div class="hud">
+      <div class="badge combo" id="comboBadge">Combo x1</div>
+      <div class="badge double" id="doubleBadge" style="display:none;">×2 punkty: <span id="doubleLeft">0</span>s</div>
+    </div>
+
+    <div id="board">
+      <div class="phone" id="dropZone" aria-label="Aplikacja Animalhotels – upuść tutaj">
+        <div class="logo">
+          <div class="diamond" aria-hidden="true"></div>
+          <h2>Animalhotels</h2>
+          <p>Przeciągaj petsitterów i pupile tutaj</p>
+        </div>
+        <div class="drop-hint">Upuść w obrębie telefonu</div>
+      </div>
+    </div>
+
+    <!-- START -->
+    <div class="overlay show" id="startOv">
+      <div class="card">
+        <h3>Wybierz tryb i startuj!</h3>
+        <p>Zbieraj uśmiechniętych petsitterów i szczęśliwe zwierzaki. Łap bonusy 💎, buduj combo 🔥.</p>
+        <div class="row">
+          <div class="select" id="levelSel">
+            <div class="chip active" data-id="easy">Łatwy</div>
+            <div class="chip" data-id="normal">Normalny</div>
+            <div class="chip" data-id="hard">Trudny</div>
+          </div>
+        </div>
+        <p class="muted" id="levelDesc">Łatwy: 75s, wolniejsze ruchy, więcej czasu.</p>
+        <div class="btns">
+          <button id="startBtn">Start</button>
+          <button class="secondary" id="viewLB">Zobacz ranking</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONIEC -->
+    <div class="overlay" id="endOv">
+      <div class="card">
+        <h3>📣 Koniec czasu!</h3>
+        <p>Wynik: <b><span id="finalScore">0</span></b> | Zebrano: <b><span id="finalCollected">0</span></b> | Max combo: <b><span id="finalCombo">1</span>×</b></p>
+        <div style="margin:8px 0 12px 0;">
+          <input id="nameInput" maxlength="12" placeholder="Twoje imię/nick" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text)">
+          <button id="saveScore">Zapisz do rankingu</button>
+        </div>
+        <div class="btns">
+          <button id="playAgain">Zagraj jeszcze raz</button>
+          <button class="secondary" id="openLB">Pokaż ranking</button>
+          <button class="secondary" id="share">Udostępnij wynik</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANKING -->
+    <div class="overlay" id="lbOv">
+      <div class="card">
+        <h3>🏆 Ranking Animalhotels</h3>
+        <table class="leadertable" id="lbTable">
+          <thead><tr><th>#</th><th>Nick</th><th>Wynik</th><th>Poziom</th><th>Max combo</th><th>Data</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="btns">
+          <button id="lbClose">Zamknij</button>
+          <button class="secondary" id="lbClear">Wyczyść ranking</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="help">
+      Sterowanie: przeciągaj elementy myszką lub palcem do telefonu. Różne zwierzęta mają różną wartość. Zbieraj 💎 Diamond Token, żeby przez chwilę mieć ×2 punkty. Utrzymuj szybkie tempo, by rosnął mnożnik combo.
+    </footer>
+  </div>
+
+<script>
+(() => {
+  const gameRoot = document.body;
+  const board = document.getElementById('board');
+  const dropZone = document.getElementById('dropZone');
+  const timeEl = document.getElementById('time');
+  const scoreEl = document.getElementById('score');
+  const collectedEl = document.getElementById('collected');
+  const lvlEl = document.getElementById('lvl');
+
+  const startOv = document.getElementById('startOv');
+  const endOv = document.getElementById('endOv');
+  const lbOv = document.getElementById('lbOv');
+
+  const finalScore = document.getElementById('finalScore');
+  const finalCollected = document.getElementById('finalCollected');
+  const finalCombo = document.getElementById('finalCombo');
+  const playAgainBtn = document.getElementById('playAgain');
+  const shareBtn = document.getElementById('share');
+  const saveScoreBtn = document.getElementById('saveScore');
+  const nameInput = document.getElementById('nameInput');
+
+  const levelSel = document.getElementById('levelSel');
+  const levelDesc = document.getElementById('levelDesc');
+  const startBtn = document.getElementById('startBtn');
+  const viewLB = document.getElementById('viewLB');
+  const openLB = document.getElementById('openLB');
+  const showLB = document.getElementById('showLB');
+  const lbTableBody = document.querySelector('#lbTable tbody');
+  const lbClose = document.getElementById('lbClose');
+  const lbClear = document.getElementById('lbClear');
+  const muteBtn = document.getElementById('muteBtn');
+  const skinBtn = document.getElementById('skinBtn');
+
+  const comboBadge = document.getElementById('comboBadge');
+
+
+  // Reliable 100vh on mobile/in-app browsers — sets --vh to window.innerHeight * 1%
+  function setVH() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+  setVH();
+
+  const doubleBadge = document.getElementById('doubleBadge');
+  const doubleLeft = document.getElementById('doubleLeft');
+
+  // Zwierzęta: punkty zależne od gatunku
+  const PETS = [
+    {e:"🐶", v:2, n:"pies"},
+    {e:"🐱", v:2, n:"kot"},
+    {e:"🐰", v:3, n:"królik"},
+    {e:"🦜", v:3, n:"papuga"},
+    {e:"🦎", v:4, n:"jaszczurka"},
+    {e:"🦔", v:4, n:"jeż"},
+    {e:"🐢", v:5, n:"żółw"},
+    {e:"🐕‍🦺", v:3, n:"pies przew."},
+    {e:"🦮", v:3, n:"pies sport."},
+    {e:"🐹", v:3, n:"chomik"}
+  ];
+  const sitterFaces = ["🙂","😄","😊","😁","😃"];
+  const petSmiles = ["🥰","😺","🐶","✨","💚"];
+
+  let W, H, running=false, timer=60, score=0, collected=0, spawnInt, tickInt, bonusInt, floaters=[];
+  let spawnEvery=1100, baseSpeed=1, sitterVal=3;
+  let difficulty='Normalny';
+  let muted=false;
+
+  // Combo system
+  let combo=1, bestCombo=1, lastCollectAt=0, comboTimeout=null;
+  const COMBO_WINDOW = 1200; // ms
+  function bumpCombo(){
+    const now = performance.now();
+    if(now - lastCollectAt <= COMBO_WINDOW) combo++;
+    else combo = 1;
+    lastCollectAt = now;
+    bestCombo = Math.max(bestCombo, combo);
+    updateComboHUD();
+    if(comboTimeout) clearTimeout(comboTimeout);
+    comboTimeout = setTimeout(()=>{ combo=1; updateComboHUD(); }, COMBO_WINDOW);
+  }
+  function comboMultiplier(){
+    // skaluje co 3 trafienia, max ×5
+    const m = Math.min(5, 1 + Math.floor((combo-1)/3));
+    return m;
+  }
+  function updateComboHUD(){
+    const m = comboMultiplier();
+    comboBadge.textContent = `Combo x${m}`;
+    comboBadge.classList.toggle('hot', m >= 3);
+  }
+
+  // Double points bonus
+  let doubleActive=false, doubleTimer=0, doubleTicker=null;
+  function setDouble(active, secs=0){
+    doubleActive = active;
+    if(active){
+      doubleTimer = secs;
+      doubleBadge.style.display='';
+      doubleLeft.textContent = doubleTimer;
+      if(doubleTicker) clearInterval(doubleTicker);
+      doubleTicker = setInterval(()=>{
+        doubleTimer--;
+        doubleLeft.textContent = doubleTimer;
+        if(doubleTimer<=0){ clearInterval(doubleTicker); doubleTicker=null; doubleBadge.style.display='none'; doubleActive=false; }
+      },1000);
+    }else{
+      doubleBadge.style.display='none';
+      if(doubleTicker) clearInterval(doubleTicker);
+      doubleTicker=null;
+    }
+  }
+
+  // AUDIO (prosty synth)
+  let audioCtx;
+  function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  function beep(f=600, dur=0.08, gain=0.06, type='sine'){ if(muted) return;
+    ensureAudio(); const t=audioCtx.currentTime; const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+dur);
+  }
+  function chord(){ beep(740,0.09,0.06,'triangle'); setTimeout(()=>beep(880,0.09,0.05,'triangle'),60); setTimeout(()=>beep(988,0.10,0.045,'triangle'),110); }
+  function power(){ beep(520,0.06,0.07,'sawtooth'); setTimeout(()=>beep(680,0.07,0.06,'square'),70); }
+
+  function size(){ const r=board.getBoundingClientRect(); W=r.width; H=r.height; }
+
+  function setCompactIfNeeded(){
+    const compact = window.matchMedia('(max-width: 420px)').matches;
+    document.body.classList.toggle('compact', compact);
+  }
+  setCompactIfNeeded();
+  window.addEventListener('resize', setCompactIfNeeded);
+
+  window.addEventListener('resize', size); size();
+  function rnd(min, max){ return Math.random()*(max-min)+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  // Poziomy
+  const LEVELS = {
+    easy:   { label:'Łatwy',   time:75, spawn:1300, speed:0.8,  sitter:3, desc:'Łatwy: 75s, wolniejsze ruchy, więcej czasu.' },
+    normal: { label:'Normalny',time:60, spawn:1100, speed:1.0,  sitter:3, desc:'Normalny: 60s, standardowa dynamika.' },
+    hard:   { label:'Trudny',  time:50, spawn:900,  speed:1.25, sitter:4, desc:'Trudny: 50s, szybsze obiekty i częstszy spawn, +1 pkt za petsittera.' }
+  };
+  let chosen = 'easy';
+  function applyLevel(key){
+    const L = LEVELS[key];
+    timer = L.time; spawnEvery=L.spawn; baseSpeed=L.speed; sitterVal=L.sitter; difficulty=L.label;
+    lvlEl.textContent = difficulty; timeEl.textContent = timer;
+    levelDesc.textContent = L.desc;
+  }
+  applyLevel(chosen);
+
+  levelSel.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    levelSel.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active'); chosen = chip.dataset.id; applyLevel(chosen);
+  });
+
+  // Entity spawner
+  function spawnEntity(type){
+    const el = document.createElement('div');
+    el.className = `entity ${type}`;
+    let faceEmoji=""; let points=0; let labelText="";
+    if(type==='pet'){
+      const p = pick(PETS); faceEmoji = p.e; points = p.v; labelText = `pupil <span class="smile"></span>`;
+      el.dataset.base = points;
+    }else if(type==='sitter'){
+      faceEmoji = "🧑‍🦰"; points = sitterVal; labelText = `petsitter <span class="smile"></span>`;
+      el.dataset.base = points;
+    }else{ // bonus
+      faceEmoji = "💎"; points = 0; labelText = `Diamond Token`;
+      el.dataset.bonus = "double";
+    }
+    const face = document.createElement('div'); face.textContent = faceEmoji;
+    const label = document.createElement('div'); label.className='label'; label.innerHTML = labelText;
+    el.appendChild(face); el.appendChild(label);
+    if(type==='bonus'){ el.classList.add('bonus'); }
+
+    board.appendChild(el);
+
+    // spawn from edges
+    const side = Math.floor(Math.random()*4);
+    let x=0,y=0;
+    if(side===0){ x=rnd(10,W-110); y=-20; }
+    else if(side===1){ x=W+20; y=rnd(10,H-90); }
+    else if(side===2){ x=rnd(10,W-110); y=H+20; }
+    else { x=-120; y=rnd(10,H-90); }
+    el.style.left = x+"px"; el.style.top = y+"px";
+
+    const floater = {
+      el, type,
+      vx: rnd(-0.6,0.6)*baseSpeed, vy: rnd(-0.6,0.6)*baseSpeed,
+      sway:rnd(0.002,0.006)*baseSpeed, t: rnd(0,Math.PI*2)
+    };
+    floaters.push(floater);
+    enableDrag(el, floater);
+  }
+
+  function enableDrag(el, floater){
+    let dragging=false, offsetX=0, offsetY=0;
+    const start = (e)=>{
+      dragging=true; el.classList.add('grabbing');
+      const p = pointFromEvent(e);
+      const r = el.getBoundingClientRect();
+      offsetX = p.x - r.left; offsetY = p.y - r.top;
+      e.preventDefault();
+    };
+    const move = (e)=>{
+      if(!dragging) return;
+      const p = pointFromEvent(e);
+      const x = p.x - offsetX - board.getBoundingClientRect().left;
+      const y = p.y - offsetY - board.getBoundingClientRect().top;
+      el.style.left = clamp(x, 2, W-80) + "px";
+      el.style.top  = clamp(y, 2, H-60) + "px";
+    };
+    const end = ()=>{
+      if(!dragging) return;
+      dragging=false; el.classList.remove('grabbing');
+      if(intersects(el, dropZone)){ collect(el, floater); }
+    };
+    el.addEventListener('mousedown', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    el.addEventListener('touchstart', start, {passive:false});
+    window.addEventListener('touchmove', move, {passive:false});
+    window.addEventListener('touchend', end);
+  }
+
+  function pointFromEvent(e){ if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY}; return {x:e.clientX, y:e.clientY}; }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function intersects(a, b){
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    return !(ra.right<rb.left || ra.left>rb.right || ra.bottom<rb.top || ra.top>rb.bottom);
+  }
+
+  function collect(el, floater){
+    // bonus?
+    if(floater.type==='bonus'){
+      setDouble(true, 8); power();
+      burst(el, true);
+      el.remove();
+      floaters = floaters.filter(f => f !== floater);
+      return;
+    }
+
+    // regular collect
+    const smile = el.querySelector('.smile');
+    smile.textContent = floater.type==='pet' ? petSmiles[Math.floor(Math.random()*petSmiles.length)] : sitterFaces[Math.floor(Math.random()*sitterFaces.length)];
+    el.style.transform = 'scale(1.08)'; setTimeout(()=>{ el.style.transform=''; },120);
+
+    const base = Number(el.dataset.base||0);
+    bumpCombo();
+    let pts = base * comboMultiplier();
+    if(doubleActive) pts *= 2;
+
+    if(floater.type==='pet') beep(640,0.05);
+    else chord();
+
+    score += pts; collected += 1;
+    scoreEl.textContent = score; collectedEl.textContent = collected;
+
+    floatingText(`+${pts}`, el);
+    burst(el);
+
+    // move into phone & remove
+    el.style.transition='all .25s ease';
+    const dz = dropZone.getBoundingClientRect(), bd = board.getBoundingClientRect();
+    el.style.left = (dz.left - bd.left + dz.width/2 - 30)+'px';
+    el.style.top  = (dz.top - bd.top + dz.height/2 - 20)+'px';
+    el.style.opacity='0';
+    setTimeout(()=>{ el.remove(); }, 250);
+    floaters = floaters.filter(f => f !== floater);
+  }
+
+  function burst(el, gold=false){
+    const r = el.getBoundingClientRect(), bd = board.getBoundingClientRect();
+    const cx = r.left - bd.left + r.width/2, cy = r.top - bd.top + r.height/2;
+    const pieces = 12 + Math.floor(Math.random()*8);
+    for(let i=0;i<pieces;i++){
+      const c = document.createElement('div');
+      c.className='confetti';
+      c.textContent = gold ? "💎" : (Math.random()<0.5 ? "✨" : "💎");
+      board.appendChild(c);
+      const ang = Math.random()*Math.PI*2;
+      const dist = 40 + Math.random()*60;
+      const tx = cx + Math.cos(ang)*dist, ty = cy + Math.sin(ang)*dist;
+      c.style.left = cx+'px'; c.style.top = cy+'px'; c.style.opacity='1';
+      c.animate([
+        { transform:'translate(0,0) scale(1)', opacity:1 },
+        { transform:`translate(${tx-cx}px, ${ty-cy}px) scale(${1+Math.random()*0.6})`, opacity:0 }
+      ], { duration: 600 + Math.random()*400, easing:'cubic-bezier(.17,.67,.35,1.2)'});
+      setTimeout(()=>c.remove(), 900);
+    }
+  }
+
+  function floatingText(txt, fromEl){
+    const r = fromEl.getBoundingClientRect(), bd = board.getBoundingClientRect();
+    const fx = r.left - bd.left + r.width/2, fy = r.top - bd.top;
+    const t = document.createElement('div');
+    t.className='confetti'; t.style.fontSize='20px'; t.textContent = txt;
+    t.style.left = fx+'px'; t.style.top = fy+'px';
+    board.appendChild(t);
+    t.animate([{transform:'translate(-50%,-10px)',opacity:0},{transform:'translate(-50%,-40px)',opacity:1},{transform:'translate(-50%,-70px)',opacity:0}],{duration:900,easing:'ease-out'});
+    setTimeout(()=>t.remove(), 900);
+  }
+
+  function gameTick(){
+    for(const f of floaters){
+      let x = parseFloat(f.el.style.left), y = parseFloat(f.el.style.top);
+      f.t += f.sway;
+      x += f.vx + Math.cos(f.t)*0.22*baseSpeed;
+      y += f.vy + Math.sin(f.t*0.9)*0.22*baseSpeed;
+      if(x<0 || x>W-100) f.vx *= -1;
+      if(y<0 || y>H-70)  f.vy *= -1;
+      f.el.style.left = clamp(x, 2, W-100)+'px';
+      f.el.style.top  = clamp(y, 2, H-70)+'px';
+    }
+  }
+
+  function start(){
+    running = true; score=0; collected=0; combo=1; bestCombo=1; lastCollectAt=0; updateComboHUD(); setDouble(false);
+    scoreEl.textContent=score; collectedEl.textContent=collected;
+    endOv.classList.remove('show'); lbOv.classList.remove('show'); startOv.classList.remove('show');
+    floaters.forEach(f=>f.el.remove()); floaters=[];
+    for(let i=0;i<6;i++) spawnEntity('pet');
+    for(let i=0;i<4;i++) spawnEntity('sitter');
+
+    clearInterval(spawnInt); clearInterval(tickInt); clearInterval(bonusInt);
+    spawnInt = setInterval(()=>{ if(!running) return; spawnEntity(Math.random()<0.55 ? 'pet' : 'sitter'); }, spawnEvery);
+    tickInt = setInterval(()=>{ if(!running) return; timer--; timeEl.textContent = timer; if(timer<=0) end(); }, 1000);
+    // bonus co ~15–22s
+    bonusInt = setInterval(()=>{ if(!running) return; spawnEntity('bonus'); }, 15000 + Math.floor(Math.random()*7000));
+
+    (function raf(){ if(!running) return; gameTick(); requestAnimationFrame(raf); })();
+  }
+
+  function end(){
+    running=false; clearInterval(spawnInt); clearInterval(tickInt); clearInterval(bonusInt);
+    finalScore.textContent = score; finalCollected.textContent = collected; finalCombo.textContent = comboMultiplier();
+    endOv.classList.add('show');
+  }
+
+  // Ranking (localStorage)
+  const KEY='ah_leaderboard_v2';
+  function getLB(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ return [] } }
+  function setLB(list){ localStorage.setItem(KEY, JSON.stringify(list.slice(0,10))); }
+  function addToLB(name, score, diff, combo){
+    const list = getLB();
+    list.push({name:name||'Anon', score, diff, combo, date:new Date().toISOString().slice(0,10)});
+    list.sort((a,b)=>b.score-a.score);
+    setLB(list);
+  }
+  function renderLB(){
+    const list = getLB();
+    lbTableBody.innerHTML = '';
+    if(list.length===0){
+      const tr=document.createElement('tr'); const td=document.createElement('td');
+      td.colSpan=6; td.textContent='Brak wyników. Zagraj rundę i zapisz wynik!'; td.style.opacity='.8';
+      tr.appendChild(td); lbTableBody.appendChild(tr); return;
+    }
+    list.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(r.name)}</td><td>${r.score}</td><td>${r.diff}</td><td>${r.combo}×</td><td>${r.date}</td>`;
+      lbTableBody.appendChild(tr);
+    });
+  }
+  function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // Handlery
+  startBtn.addEventListener('click', ()=>{ applyLevel(chosen); start(); });
+  playAgainBtn.addEventListener('click', ()=>{ start(); });
+  shareBtn.addEventListener('click', async ()=>{
+    const text = `Gram w Animalhotels: Smile & Match — wynik ${score} (poziom ${difficulty}), max combo ${comboMultiplier()}×, zebrane ${collected}! 😄`;
+    if(navigator.share){ try{ await navigator.share({title:'Animalhotels: Smile & Match', text}); }catch(e){} }
+    else { try{ await navigator.clipboard.writeText(text); shareBtn.textContent='Skopiowano!'; setTimeout(()=>shareBtn.textContent='Udostępnij wynik',1400);}catch(e){} }
+  });
+  saveScoreBtn.addEventListener('click', ()=>{
+    addToLB(nameInput.value.trim(), Number(finalScore.textContent), difficulty, Number(finalCombo.textContent));
+    nameInput.value=''; renderLB(); lbOv.classList.add('show');
+  });
+  viewLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
+  openLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
+  showLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
+  lbClose.addEventListener('click', ()=> lbOv.classList.remove('show'));
+  lbClear.addEventListener('click', ()=>{
+    if(confirm('Wyczyścić lokalny ranking?')){ localStorage.removeItem(KEY); renderLB(); }
+  });
+  muteBtn.addEventListener('click', ()=>{
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇 Wyciszone' : '🔊 Dźwięk';
+    muteBtn.classList.toggle('muted', muted);
+  });
+  skinBtn.addEventListener('click', ()=>{
+    const neon = gameRoot.classList.toggle('skin-neon');
+    skinBtn.textContent = neon ? '🎨 Motyw: Neon' : '🎨 Motyw: Classic';
+  });
+
+  // odblokowanie AudioContext
+  window.addEventListener('pointerdown', ()=>{ try{ ensureAudio(); audioCtx.resume && audioCtx.resume(); }catch(e){} }, {once:true});
+
+  // pętla animacji
+  (function raf(){ if(running) gameTick(); requestAnimationFrame(raf); })();
+
+  // utils
+  function pointFromEvent(e){ if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY}; return {x:e.clientX, y:e.clientY}; }
+
+  // start overlay opis
+  updateComboHUD();
+})();
+</script>
+</body>
+</html>
