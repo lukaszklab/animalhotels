@@ -1,578 +1,629 @@
-<!doctype html>
-<html lang="pl">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Animalhotels: Smile & Match — Combos + Bonusy + Skins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Animalhotels — Pet ↔ Sitter Match</title>
 <style>
   :root{
-    --bg:#0f172a; --card:#111827; --brand:#22d3ee; --brand2:#a78bfa; --good:#22c55e; --text:#e5e7eb;
-    --ring-pet: var(--brand); --ring-sitter: var(--brand2);
+    --bg:#0f1220;           /* deep night */
+    --panel:#151931;        /* app card */
+    --ink:#eaf0ff;          /* primary text */
+    --muted:#9aa4c7;        /* secondary text */
+    --brand:#6CE3D9;        /* Animalhotels vibe */
+    --accent:#A7B1FF;       /* soft indigo */
+    --warn:#FFC857;         /* timer */
+    --bad:#FF6B6B;          /* wrong */
+    --good:#6CE39C;         /* right */
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+    --radius:16px;
   }
-  html,body{height:100%;margin:0;background:radial-gradient(1200px 700px at 70% -10%, #1f2937, #0b1023 60%, #0a0f1f);}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;}
-  .game{width:min(1000px, 96vw); height:min(640px, 90vh); position:relative; border-radius:18px; background:
-    radial-gradient(800px 400px at 20% 10%, rgba(34,211,238,0.08), transparent 60%),
-    radial-gradient(600px 300px at 80% 0%, rgba(167,139,250,0.08), transparent 60%),
-    var(--card);
-    box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:radial-gradient(1200px 800px at 10% -10%, #1b2145 0%, #0f1220 55%), var(--bg);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+    color:var(--ink);
+    -webkit-tap-highlight-color: transparent;
     overflow:hidden;
   }
-  header{position:absolute; inset:16px 16px auto 16px; display:flex; align-items:center; gap:12px;
-    padding:10px 14px; border-radius:14px; background:rgba(255,255,255,.04); backdrop-filter: blur(6px);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); z-index:20;
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px 4px;
   }
-  .diamond{width:26px;height:26px;border:2px solid var(--brand);transform:rotate(45deg);border-radius:4px; position:relative;}
-  .diamond::after{content:""; position:absolute; inset:-2px; border:2px solid var(--brand2); border-top:0;border-left:0; border-radius:4px;}
-  .title{font-weight:700; letter-spacing:.2px}
-  .stats{margin-left:auto; display:flex; gap:10px; font-weight:600; flex-wrap:wrap}
-  .pill{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-  .ctrls{display:flex; gap:8px; align-items:center}
-  .btn{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.18);padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:700}
-
-  #board{position:absolute; inset:0}
-
-  .phone{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(230px, 38vw); height:min(420px, 65vh);
-    border-radius:28px; background:linear-gradient(180deg,#0b1224,#0a1328);
-    box-shadow:0 12px 30px rgba(2,8,23,.6), inset 0 0 0 2px rgba(255,255,255,.06);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    outline:2px dashed rgba(255,255,255,.12); outline-offset:-12px;
+  .brand{
+    display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px;
   }
-  .phone .logo{display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; padding:12px}
-  .logo .diamond{width:34px;height:34px}
-  .logo h2{margin:0; font-size:18px; letter-spacing:.3px}
-  .logo p{margin:0; font-size:12px; opacity:.7}
-  .drop-hint{position:absolute; bottom:20px; font-size:12px; opacity:.75}
-
-  .entity{position:absolute; user-select:none; cursor:grab; touch-action:none; font-size:34px; padding:10px 14px; border-radius:12px;
-    background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 6px 18px rgba(2,8,23,.35);
-    display:flex; align-items:center; gap:8px; transition:transform .08s ease;
+  .diamond{
+    width:22px; height:22px; display:inline-block; position:relative;
+    background: conic-gradient(from 45deg, var(--brand), var(--accent), var(--brand));
+    transform: rotate(45deg); border-radius:4px; box-shadow: var(--shadow);
   }
-  .entity.sitter{--ring: var(--ring-sitter);}
-  .entity.pet{--ring: var(--ring-pet);}
-  .entity.bonus{--ring: #f59e0b;}
-  .entity::after{content:""; position:absolute; inset:-3px; border-radius:14px; border:2px solid var(--ring); opacity:.7; pointer-events:none;}
-  .label{font-size:13px; opacity:.9}
-  .smile{margin-left:4px}
-  .grabbing{cursor:grabbing; transform:scale(1.03)}
-  .confetti{position:absolute; pointer-events:none; font-size:18px; will-change:transform,opacity;}
+  .hud{display:flex; gap:14px; align-items:center; font-size:14px; color:var(--muted)}
+  .pill{
+    padding:6px 10px; border-radius:999px; background:#0d1022; border:1px solid #20264a; color:var(--ink)
+  }
+  .pill em{font-style:normal; color:var(--brand); font-weight:700}
+  main{
+    display:grid; grid-template-columns: 1fr min(420px, 75vw) 1fr;
+    grid-template-rows: auto 1fr auto; height:calc(100% - 58px); gap:10px; padding:8px 12px 16px;
+  }
+  /* Left: Pet queue + needs */
+  .left{
+    display:flex; flex-direction:column; gap:12px; padding:8px;
+  }
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    border:1px solid #242a52; border-radius:var(--radius); box-shadow: var(--shadow);
+  }
+  .pet-card{
+    padding:14px; display:flex; gap:12px; align-items:center;
+  }
+  .pet-emoji{font-size:28px; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+  .tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+  .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:#101639; border:1px solid #29306b; color:#dfe6ff}
+  .need{font-size:13px; color:var(--muted)}
+  .queue{display:flex; gap:8px; overflow:auto; padding:6px 4px}
+  .mini{min-width:54px; height:54px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:1px dashed #2a3166; background:#0c1130; font-size:22px; opacity:.8}
+  .mini.active{border-style:solid; opacity:1}
 
-  .overlay{position:absolute; inset:0; background:rgba(2,6,23,.6); display:none; align-items:center; justify-content:center; padding:20px; z-index:30}
+  /* Center: Phone drop zone */
+  .phone{
+    align-self:center; justify-self:center; width:min(420px, 75vw);
+    height:min(720px, 82vh); border-radius:36px; padding:14px; background:linear-gradient(180deg,#0b0f22,#0a0d1d);
+    border:2px solid #2a3166; box-shadow: 0 16px 60px rgba(0,0,0,.6), inset 0 0 0 6px #0b102a;
+    position:relative; display:flex; flex-direction:column; gap:10px;
+  }
+  .notch{width:42%; height:20px; background:#060913; border-bottom-left-radius:14px; border-bottom-right-radius:14px; align-self:center}
+  .app{
+    flex:1; border-radius:20px; background: linear-gradient(180deg, #0f1632, #0a102b);
+    border:1px solid #222a5a; position:relative; overflow:hidden; padding:10px;
+  }
+  .drop-zone{
+    position:absolute; inset:10px; border-radius:16px; border:2px dashed #36408b; display:flex; align-items:center; justify-content:center;
+    color:#b9c3ff; font-size:14px; text-align:center; padding:10px;
+  }
+  .drop-zone.ready{border-style:solid; color:#98ffd7; border-color:#2bdbbb}
+  .flash{
+    position:absolute; inset:0; border-radius:16px; pointer-events:none; opacity:0; transition:opacity .35s ease;
+  }
+  .flash.ok{background:rgba(108,227,156,.15)}
+  .flash.bad{background:rgba(255,107,107,.15)}
+  .flash.show{opacity:1}
+
+  /* Right: Sitters (draggable) */
+  .right{display:flex; flex-direction:column; gap:10px}
+  .sitters{
+    display:grid; grid-template-columns: 1fr; gap:10px; overflow:auto; padding-right:6px; max-height:70vh;
+  }
+  .sitter{
+    padding:12px; display:flex; gap:10px; align-items:flex-start; cursor:grab; touch-action:none; position:relative;
+  }
+  .sitter:active{cursor:grabbing}
+  .avatar{
+    width:46px; height:46px; border-radius:12px; background:#0e153b; border:1px solid #2a3166; display:grid; place-items:center; font-size:22px
+  }
+  .sitter h4{margin:0; font-size:15px}
+  .scoreline{font-size:12px; color:var(--muted)}
+  .suit{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+  .sitter.dragging {opacity:.9; transform:scale(1.02); z-index:9999}
+  .floating{
+    position:fixed; left:0; top:0; transform:translate(-9999px,-9999px); pointer-events:none;
+  }
+
+  /* Footer controls */
+  .footer{
+    grid-column:1/-1; display:flex; justify-content:center; gap:10px; padding-top:6px
+  }
+  button{
+    appearance:none; border:none; padding:12px 16px; border-radius:14px; font-weight:700; letter-spacing:.3px;
+    background:linear-gradient(180deg, #1e2861, #182158); color:#eaf0ff; border:1px solid #2a3474; box-shadow: var(--shadow);
+  }
+  button.secondary{background:linear-gradient(180deg, #152046, #111a3a)}
+  button:active{transform:translateY(1px)}
+  .timer{color:var(--warn); font-weight:700}
+  .lives{letter-spacing:2px}
+
+  /* Overlays */
+  .overlay{
+    position:fixed; inset:0; background:rgba(4,6,14,.75); display:none; align-items:center; justify-content:center; padding:16px; z-index:10000;
+  }
   .overlay.show{display:flex}
-  .card{background:linear-gradient(180deg,#0f1a33,#0c162b); border-radius:16px; padding:22px; width:min(680px, 96vw);
-    box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.06); text-align:center;}
-  .card h3{margin:0 0 8px 0}
-  .card p{margin:0 0 14px 0; opacity:.85}
-  .btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-  button{background:linear-gradient(180deg, #22d3ee, #0694b5); color:#041018; border:0; padding:10px 14px; border-radius:10px; font-weight:800;
-    box-shadow:0 6px 14px rgba(34,211,238,.35); cursor:pointer;}
-  button.secondary{background:transparent; color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.15)}
-  .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-  .select{display:flex; gap:6px; flex-wrap:wrap; justify-content:center}
-  .chip{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.18); cursor:pointer}
-  .chip.active{border-color:var(--brand); box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
-
-  .leadertable{width:100%; border-collapse:collapse; margin-top:8px; font-size:14px}
-  .leadertable th,.leadertable td{border-bottom:1px solid rgba(255,255,255,.1); padding:6px 8px; text-align:left}
-  .leadertable th{opacity:.8}
-  .muted{opacity:.6}
-
-  /* HUD rozszerzony */
-  .hud{position:absolute; left:50%; transform:translateX(-50%); top:14px; display:flex; gap:8px; z-index:15}
-  .hud .badge{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); font-weight:700}
-  .badge.combo.hot{background:rgba(251, 113, 133, .12); border-color:rgba(251, 113, 133, .35)}
-  .badge.double{background:rgba(250, 204, 21, .12); border-color:rgba(250, 204, 21, .38)}
-
-  /* Skins */
-  .skin-neon{--card:#070b16; --ring-pet:#3b82f6; --ring-sitter:#a855f7;}
-  .skin-neon .game{background:
-    radial-gradient(800px 400px at 20% 10%, rgba(59,130,246,0.10), transparent 60%),
-    radial-gradient(600px 300px at 80% 0%, rgba(168,85,247,0.10), transparent 60%),
-    var(--card);}
+  .modal{max-width:520px; width:100%; background:linear-gradient(180deg, #0f1634, #0a102a); border:1px solid #273070; border-radius:20px; padding:18px; box-shadow: var(--shadow)}
+  .modal h2{margin:.2em 0 .4em 0}
+  .options{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+  .options button{flex:1}
+  .leader{margin-top:8px; font-size:14px; color:var(--muted)}
+  .leader ol{margin:.3em 0 .2em 1.2em}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+  @media (max-width:900px){
+    main{grid-template-columns: 1fr}
+    .left,.right{order:3}
+    .phone{order:2}
+    .sitters{grid-template-columns: 1fr 1fr}
+  }
 </style>
 </head>
 <body>
-  <div class="game" id="game">
-    <header>
-      <div class="diamond" aria-hidden="true"></div>
-      <div class="title">Animalhotels: Smile & Match</div>
-      <div class="stats">
-        <div class="pill">⏱️ <span id="time">60</span>s</div>
-        <div class="pill">✨ Punkty: <span id="score">0</span></div>
-        <div class="pill">📦 Zebrano: <span id="collected">0</span></div>
-        <div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
-      </div>
-      <div class="ctrls">
-        <button class="btn" id="skinBtn">🎨 Motyw</button>
-        <button class="btn" id="muteBtn">🔊 Dźwięk</button>
-        <button class="btn" id="showLB">🏆 Ranking</button>
-      </div>
-    </header>
-
+  <header>
+    <div class="brand">
+      <span class="diamond" aria-hidden="true"></span>
+      <span>Animalhotels</span>
+    </div>
     <div class="hud">
-      <div class="badge combo" id="comboBadge">Combo x1</div>
-      <div class="badge double" id="doubleBadge" style="display:none;">×2 punkty: <span id="doubleLeft">0</span>s</div>
+      <div class="pill">Level <em id="level">1</em></div>
+      <div class="pill">XP <em id="score">0</em></div>
+      <div class="pill">Time <em class="timer" id="time">20</em>s</div>
+      <div class="pill">Lives <em class="lives" id="lives">❤❤❤</em></div>
     </div>
+  </header>
 
-    <div id="board">
-      <div class="phone" id="dropZone" aria-label="Aplikacja Animalhotels – upuść tutaj">
-        <div class="logo">
-          <div class="diamond" aria-hidden="true"></div>
-          <h2>Animalhotels</h2>
-          <p>Przeciągaj petsitterów i pupile tutaj</p>
+  <main>
+    <section class="left">
+      <article class="pet-card card" id="currentPet">
+        <div class="pet-emoji" id="petEmoji" aria-hidden="true">🐶</div>
+        <div>
+          <div id="petTitle" style="font-weight:700">Dog — medium, active</div>
+          <div class="need" id="petNeed">Needs: long walks</div>
+          <div class="tags" id="petTags"></div>
         </div>
-        <div class="drop-hint">Upuść w obrębie telefonu</div>
+      </article>
+      <div class="queue" id="queue"></div>
+    </section>
+
+    <section class="phone card" id="phone">
+      <div class="notch" aria-hidden="true"></div>
+      <div class="app">
+        <div class="drop-zone" id="drop">Drag the best sitter here to confirm your match</div>
+        <div class="flash" id="flash"></div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="sitters" id="sitters"></div>
+    </section>
+
+    <div class="footer">
+      <button id="startBtn">Start</button>
+      <button id="howBtn" class="secondary">How to play</button>
+    </div>
+  </main>
+
+  <!-- Overlays -->
+  <div class="overlay" id="startOverlay" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <div class="modal">
+      <h2 id="startTitle">Match pets to the right sitter</h2>
+      <p style="color:var(--muted); margin-top:0">Choose difficulty and press Start. Drag the sitter card into the phone. Get it right to earn XP and level up.</p>
+      <div class="options" role="group" aria-label="Difficulty">
+        <button data-diff="easy">Easy</button>
+        <button data-diff="normal">Normal</button>
+        <button data-diff="hard">Hard</button>
+      </div>
+      <div class="options">
+        <button id="startGame">Start Game</button>
+      </div>
+      <div class="leader">
+        <strong>Top scores (this device)</strong>
+        <ol id="board"></ol>
       </div>
     </div>
+  </div>
 
-    <!-- START -->
-    <div class="overlay show" id="startOv">
-      <div class="card">
-        <h3>Wybierz tryb i startuj!</h3>
-        <p>Zbieraj uśmiechniętych petsitterów i szczęśliwe zwierzaki. Łap bonusy 💎, buduj combo 🔥.</p>
-        <div class="row">
-          <div class="select" id="levelSel">
-            <div class="chip active" data-id="easy">Łatwy</div>
-            <div class="chip" data-id="normal">Normalny</div>
-            <div class="chip" data-id="hard">Trudny</div>
-          </div>
-        </div>
-        <p class="muted" id="levelDesc">Łatwy: 75s, wolniejsze ruchy, więcej czasu.</p>
-        <div class="btns">
-          <button id="startBtn">Start</button>
-          <button class="secondary" id="viewLB">Zobacz ranking</button>
-        </div>
+  <div class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <div class="modal">
+      <h2 id="howTitle">How to play</h2>
+      <ul style="margin:0 0 10px 18px; color:var(--muted); line-height:1.4">
+        <li>Read the pet’s needs on the left.</li>
+        <li>Drag the best sitter into the phone screen.</li>
+        <li>Each correct match scores XP. Fill the progress to level up.</li>
+        <li>Timer speeds up each level. Three hearts = three mistakes.</li>
+        <li>Choose Easy / Normal / Hard to change spawn rate and complexity.</li>
+      </ul>
+      <div class="options">
+        <button id="closeHow">Got it</button>
       </div>
     </div>
+  </div>
 
-    <!-- KONIEC -->
-    <div class="overlay" id="endOv">
-      <div class="card">
-        <h3>📣 Koniec czasu!</h3>
-        <p>Wynik: <b><span id="finalScore">0</span></b> | Zebrano: <b><span id="finalCollected">0</span></b> | Max combo: <b><span id="finalCombo">1</span>×</b></p>
-        <div style="margin:8px 0 12px 0;">
-          <input id="nameInput" maxlength="12" placeholder="Twoje imię/nick" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text)">
-          <button id="saveScore">Zapisz do rankingu</button>
-        </div>
-        <div class="btns">
-          <button id="playAgain">Zagraj jeszcze raz</button>
-          <button class="secondary" id="openLB">Pokaż ranking</button>
-          <button class="secondary" id="share">Udostępnij wynik</button>
-        </div>
+  <div class="overlay" id="gameOver" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+    <div class="modal">
+      <h2 id="overTitle">Game Over</h2>
+      <p id="finalStats" style="margin-top:-6px; color:var(--muted)"></p>
+      <div class="options">
+        <input id="playerName" placeholder="Your name" aria-label="Your name"
+               style="flex:2; padding:12px 14px; border-radius:12px; border:1px solid #2a3474; background:#0c1130; color:var(--ink)">
+        <button id="saveScore">Save score</button>
+        <button id="again">Play again</button>
+      </div>
+      <div class="leader">
+        <strong>Top scores (this device)</strong>
+        <ol id="board2"></ol>
       </div>
     </div>
-
-    <!-- RANKING -->
-    <div class="overlay" id="lbOv">
-      <div class="card">
-        <h3>🏆 Ranking Animalhotels</h3>
-        <table class="leadertable" id="lbTable">
-          <thead><tr><th>#</th><th>Nick</th><th>Wynik</th><th>Poziom</th><th>Max combo</th><th>Data</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="btns">
-          <button id="lbClose">Zamknij</button>
-          <button class="secondary" id="lbClear">Wyczyść ranking</button>
-        </div>
-      </div>
-    </div>
-
-    <footer class="help">
-      Sterowanie: przeciągaj elementy myszką lub palcem do telefonu. Różne zwierzęta mają różną wartość. Zbieraj 💎 Diamond Token, żeby przez chwilę mieć ×2 punkty. Utrzymuj szybkie tempo, by rosnął mnożnik combo.
-    </footer>
   </div>
 
 <script>
-(() => {
-  const gameRoot = document.body;
-  const board = document.getElementById('board');
-  const dropZone = document.getElementById('dropZone');
-  const timeEl = document.getElementById('time');
-  const scoreEl = document.getElementById('score');
-  const collectedEl = document.getElementById('collected');
-  const lvlEl = document.getElementById('lvl');
-
-  const startOv = document.getElementById('startOv');
-  const endOv = document.getElementById('endOv');
-  const lbOv = document.getElementById('lbOv');
-
-  const finalScore = document.getElementById('finalScore');
-  const finalCollected = document.getElementById('finalCollected');
-  const finalCombo = document.getElementById('finalCombo');
-  const playAgainBtn = document.getElementById('playAgain');
-  const shareBtn = document.getElementById('share');
-  const saveScoreBtn = document.getElementById('saveScore');
-  const nameInput = document.getElementById('nameInput');
-
-  const levelSel = document.getElementById('levelSel');
-  const levelDesc = document.getElementById('levelDesc');
-  const startBtn = document.getElementById('startBtn');
-  const viewLB = document.getElementById('viewLB');
-  const openLB = document.getElementById('openLB');
-  const showLB = document.getElementById('showLB');
-  const lbTableBody = document.querySelector('#lbTable tbody');
-  const lbClose = document.getElementById('lbClose');
-  const lbClear = document.getElementById('lbClear');
-  const muteBtn = document.getElementById('muteBtn');
-  const skinBtn = document.getElementById('skinBtn');
-
-  const comboBadge = document.getElementById('comboBadge');
-  const doubleBadge = document.getElementById('doubleBadge');
-  const doubleLeft = document.getElementById('doubleLeft');
-
-  // Zwierzęta: punkty zależne od gatunku
-  const PETS = [
-    {e:"🐶", v:2, n:"pies"},
-    {e:"🐱", v:2, n:"kot"},
-    {e:"🐰", v:3, n:"królik"},
-    {e:"🦜", v:3, n:"papuga"},
-    {e:"🦎", v:4, n:"jaszczurka"},
-    {e:"🦔", v:4, n:"jeż"},
-    {e:"🐢", v:5, n:"żółw"},
-    {e:"🐕‍🦺", v:3, n:"pies przew."},
-    {e:"🦮", v:3, n:"pies sport."},
-    {e:"🐹", v:3, n:"chomik"}
+(()=> {
+  // ---------- Data ----------
+  const SPECIES = [
+    {name:'Dog', emoji:'🐶'},
+    {name:'Cat', emoji:'🐱'},
+    {name:'Rabbit', emoji:'🐰'},
+    {name:'Parrot', emoji:'🦜'},
+    {name:'Reptile', emoji:'🦎'}
   ];
-  const sitterFaces = ["🙂","😄","😊","😁","😃"];
-  const petSmiles = ["🥰","😺","🐶","✨","💚"];
+  const SIZES = ['small','medium','large'];
+  const TEMPER = ['calm','active','anxious'];
+  const NEEDS = ['long walks','grooming','medication','playtime','experienced with anxious pets','house sitting','litter care','temperature control'];
 
-  let W, H, running=false, timer=60, score=0, collected=0, spawnInt, tickInt, bonusInt, floaters=[];
-  let spawnEvery=1100, baseSpeed=1, sitterVal=3;
-  let difficulty='Normalny';
-  let muted=false;
-
-  // Combo system
-  let combo=1, bestCombo=1, lastCollectAt=0, comboTimeout=null;
-  const COMBO_WINDOW = 1200; // ms
-  function bumpCombo(){
-    const now = performance.now();
-    if(now - lastCollectAt <= COMBO_WINDOW) combo++;
-    else combo = 1;
-    lastCollectAt = now;
-    bestCombo = Math.max(bestCombo, combo);
-    updateComboHUD();
-    if(comboTimeout) clearTimeout(comboTimeout);
-    comboTimeout = setTimeout(()=>{ combo=1; updateComboHUD(); }, COMBO_WINDOW);
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+  function sample(arr, n){
+    const a=[...arr], out=[];
+    while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]) }
+    return out;
   }
-  function comboMultiplier(){
-    // skaluje co 3 trafienia, max ×5
-    const m = Math.min(5, 1 + Math.floor((combo-1)/3));
-    return m;
-  }
-  function updateComboHUD(){
-    const m = comboMultiplier();
-    comboBadge.textContent = `Combo x${m}`;
-    comboBadge.classList.toggle('hot', m >= 3);
-  }
+  function uid(){ return Math.random().toString(36).slice(2,9) }
 
-  // Double points bonus
-  let doubleActive=false, doubleTimer=0, doubleTicker=null;
-  function setDouble(active, secs=0){
-    doubleActive = active;
-    if(active){
-      doubleTimer = secs;
-      doubleBadge.style.display='';
-      doubleLeft.textContent = doubleTimer;
-      if(doubleTicker) clearInterval(doubleTicker);
-      doubleTicker = setInterval(()=>{
-        doubleTimer--;
-        doubleLeft.textContent = doubleTimer;
-        if(doubleTimer<=0){ clearInterval(doubleTicker); doubleTicker=null; doubleBadge.style.display='none'; doubleActive=false; }
-      },1000);
-    }else{
-      doubleBadge.style.display='none';
-      if(doubleTicker) clearInterval(doubleTicker);
-      doubleTicker=null;
-    }
-  }
-
-  // AUDIO (prosty synth)
-  let audioCtx;
-  function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-  function beep(f=600, dur=0.08, gain=0.06, type='sine'){ if(muted) return;
-    ensureAudio(); const t=audioCtx.currentTime; const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
-    o.type=type; o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+dur);
-  }
-  function chord(){ beep(740,0.09,0.06,'triangle'); setTimeout(()=>beep(880,0.09,0.05,'triangle'),60); setTimeout(()=>beep(988,0.10,0.045,'triangle'),110); }
-  function power(){ beep(520,0.06,0.07,'sawtooth'); setTimeout(()=>beep(680,0.07,0.06,'square'),70); }
-
-  function size(){ const r=board.getBoundingClientRect(); W=r.width; H=r.height; }
-  window.addEventListener('resize', size); size();
-  function rnd(min, max){ return Math.random()*(max-min)+min; }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-  // Poziomy
-  const LEVELS = {
-    easy:   { label:'Łatwy',   time:75, spawn:1300, speed:0.8,  sitter:3, desc:'Łatwy: 75s, wolniejsze ruchy, więcej czasu.' },
-    normal: { label:'Normalny',time:60, spawn:1100, speed:1.0,  sitter:3, desc:'Normalny: 60s, standardowa dynamika.' },
-    hard:   { label:'Trudny',  time:50, spawn:900,  speed:1.25, sitter:4, desc:'Trudny: 50s, szybsze obiekty i częstszy spawn, +1 pkt za petsittera.' }
+  // ---------- State ----------
+  const state = {
+    difficulty:'normal',
+    level:1,
+    score:0,
+    lives:3,
+    timeLeft:20,
+    running:false,
+    currentPet:null,
+    queue:[],
+    sitters:[],
+    levelGoal: 80, // XP to next level
+    xpThisLevel: 0,
+    timerId:null
   };
-  let chosen = 'easy';
-  function applyLevel(key){
-    const L = LEVELS[key];
-    timer = L.time; spawnEvery=L.spawn; baseSpeed=L.speed; sitterVal=L.sitter; difficulty=L.label;
-    lvlEl.textContent = difficulty; timeEl.textContent = timer;
-    levelDesc.textContent = L.desc;
+
+  // ---------- Difficulty tuning ----------
+  const TUNE = {
+    easy:   { baseTime:22, penalty:8, reward:20, options:3, decoys:1 },
+    normal: { baseTime:18, penalty:10, reward:25, options:4, decoys:2 },
+    hard:   { baseTime:14, penalty:12, reward:28, options:5, decoys:3 }
+  };
+  function timeForLevel(){
+    const t = TUNE[state.difficulty].baseTime - Math.min(state.level-1, 8);
+    return Math.max(8, t);
   }
-  applyLevel(chosen);
 
-  levelSel.addEventListener('click', (e)=>{
-    const chip = e.target.closest('.chip'); if(!chip) return;
-    levelSel.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active'); chosen = chip.dataset.id; applyLevel(chosen);
-  });
+  // ---------- Generators ----------
+  function makePet(){
+    const sp = rand(SPECIES);
+    const size = rand(SIZES);
+    const temper = rand(TEMPER);
+    // choose a need coherent with species
+    let pool = [...NEEDS];
+    if(sp.name==='Dog') pool = ['long walks','grooming','medication','playtime','experienced with anxious pets','house sitting'];
+    if(sp.name==='Cat') pool = ['litter care','grooming','medication','playtime','experienced with anxious pets','house sitting'];
+    if(sp.name==='Rabbit') pool = ['grooming','medication','playtime','house sitting','experienced with anxious pets'];
+    if(sp.name==='Parrot') pool = ['playtime','medication','house sitting','temperature control'];
+    if(sp.name==='Reptile') pool = ['temperature control','medication','house sitting'];
 
-  // Entity spawner
-  function spawnEntity(type){
-    const el = document.createElement('div');
-    el.className = `entity ${type}`;
-    let faceEmoji=""; let points=0; let labelText="";
-    if(type==='pet'){
-      const p = pick(PETS); faceEmoji = p.e; points = p.v; labelText = `pupil <span class="smile"></span>`;
-      el.dataset.base = points;
-    }else if(type==='sitter'){
-      faceEmoji = "🧑‍🦰"; points = sitterVal; labelText = `petsitter <span class="smile"></span>`;
-      el.dataset.base = points;
-    }else{ // bonus
-      faceEmoji = "💎"; points = 0; labelText = `Diamond Token`;
-      el.dataset.bonus = "double";
-    }
-    const face = document.createElement('div'); face.textContent = faceEmoji;
-    const label = document.createElement('div'); label.className='label'; label.innerHTML = labelText;
-    el.appendChild(face); el.appendChild(label);
-    if(type==='bonus'){ el.classList.add('bonus'); }
+    const need = rand(pool);
+    return { id:uid(), species:sp.name, emoji:sp.emoji, size, temper, need };
+  }
 
-    board.appendChild(el);
-
-    // spawn from edges
-    const side = Math.floor(Math.random()*4);
-    let x=0,y=0;
-    if(side===0){ x=rnd(10,W-110); y=-20; }
-    else if(side===1){ x=W+20; y=rnd(10,H-90); }
-    else if(side===2){ x=rnd(10,W-110); y=H+20; }
-    else { x=-120; y=rnd(10,H-90); }
-    el.style.left = x+"px"; el.style.top = y+"px";
-
-    const floater = {
-      el, type,
-      vx: rnd(-0.6,0.6)*baseSpeed, vy: rnd(-0.6,0.6)*baseSpeed,
-      sway:rnd(0.002,0.006)*baseSpeed, t: rnd(0,Math.PI*2)
+  function makeSitterPool(pet, count){
+    // produce one optimal sitter and the rest decoys with varied suitability
+    const names = ['Alex','Maja','Beata','Marcin','Weronika','Kuba','Ola','Tomek','Iga','Ania','Szymon','Basia','Karol','Nina'];
+    const avatars = ['🧑‍🦰','🧑‍🦱','🧑‍🦳','🧔','👩','👨','🧑','🧑‍🦲','👩‍🦰','👨‍🦱','👩‍🦳','👩‍🦲'];
+    const skillsBag = ['grooming','medication','long walks','playtime','litter care','temperature control','anxious pets','house sitting'];
+    const pool=[];
+    // guaranteed best match:
+    const best = {
+      id:uid(),
+      name: rand(names),
+      avatar: rand(avatars),
+      species: [pet.species, rand(SPECIES).name],
+      sizes: [pet.size, rand(SIZES)],
+      temperFocus: [pet.temper],
+      skills: [pet.need].concat(sample(skillsBag.filter(s=>s!==pet.need), 2)),
+      rating: (4.7 + Math.random()*0.3).toFixed(2)
     };
-    floaters.push(floater);
-    enableDrag(el, floater);
-  }
-
-  function enableDrag(el, floater){
-    let dragging=false, offsetX=0, offsetY=0;
-    const start = (e)=>{
-      dragging=true; el.classList.add('grabbing');
-      const p = pointFromEvent(e);
-      const r = el.getBoundingClientRect();
-      offsetX = p.x - r.left; offsetY = p.y - r.top;
-      e.preventDefault();
-    };
-    const move = (e)=>{
-      if(!dragging) return;
-      const p = pointFromEvent(e);
-      const x = p.x - offsetX - board.getBoundingClientRect().left;
-      const y = p.y - offsetY - board.getBoundingClientRect().top;
-      el.style.left = clamp(x, 2, W-80) + "px";
-      el.style.top  = clamp(y, 2, H-60) + "px";
-    };
-    const end = ()=>{
-      if(!dragging) return;
-      dragging=false; el.classList.remove('grabbing');
-      if(intersects(el, dropZone)){ collect(el, floater); }
-    };
-    el.addEventListener('mousedown', start);
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', end);
-    el.addEventListener('touchstart', start, {passive:false});
-    window.addEventListener('touchmove', move, {passive:false});
-    window.addEventListener('touchend', end);
-  }
-
-  function pointFromEvent(e){ if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY}; return {x:e.clientX, y:e.clientY}; }
-  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-  function intersects(a, b){
-    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
-    return !(ra.right<rb.left || ra.left>rb.right || ra.bottom<rb.top || ra.top>rb.bottom);
-  }
-
-  function collect(el, floater){
-    // bonus?
-    if(floater.type==='bonus'){
-      setDouble(true, 8); power();
-      burst(el, true);
-      el.remove();
-      floaters = floaters.filter(f => f !== floater);
-      return;
+    pool.push(best);
+    // decoys:
+    while(pool.length<count){
+      const spSet = sample(SPECIES.map(s=>s.name), Math.random()<0.6?1:2);
+      const szSet = sample(SIZES, Math.random()<0.6?1:2);
+      const tempSet = sample(TEMPER, Math.random()<0.5?1:2);
+      const dec = {
+        id:uid(),
+        name: rand(names),
+        avatar: rand(avatars),
+        species: spSet,
+        sizes: szSet,
+        temperFocus: tempSet,
+        skills: sample(skillsBag, 3),
+        rating: (4.2 + Math.random()*0.6).toFixed(2)
+      };
+      pool.push(dec);
     }
-
-    // regular collect
-    const smile = el.querySelector('.smile');
-    smile.textContent = floater.type==='pet' ? petSmiles[Math.floor(Math.random()*petSmiles.length)] : sitterFaces[Math.floor(Math.random()*sitterFaces.length)];
-    el.style.transform = 'scale(1.08)'; setTimeout(()=>{ el.style.transform=''; },120);
-
-    const base = Number(el.dataset.base||0);
-    bumpCombo();
-    let pts = base * comboMultiplier();
-    if(doubleActive) pts *= 2;
-
-    if(floater.type==='pet') beep(640,0.05);
-    else chord();
-
-    score += pts; collected += 1;
-    scoreEl.textContent = score; collectedEl.textContent = collected;
-
-    floatingText(`+${pts}`, el);
-    burst(el);
-
-    // move into phone & remove
-    el.style.transition='all .25s ease';
-    const dz = dropZone.getBoundingClientRect(), bd = board.getBoundingClientRect();
-    el.style.left = (dz.left - bd.left + dz.width/2 - 30)+'px';
-    el.style.top  = (dz.top - bd.top + dz.height/2 - 20)+'px';
-    el.style.opacity='0';
-    setTimeout(()=>{ el.remove(); }, 250);
-    floaters = floaters.filter(f => f !== floater);
+    // shuffle
+    return pool.sort(()=>Math.random()-.5);
   }
 
-  function burst(el, gold=false){
-    const r = el.getBoundingClientRect(), bd = board.getBoundingClientRect();
-    const cx = r.left - bd.left + r.width/2, cy = r.top - bd.top + r.height/2;
-    const pieces = 12 + Math.floor(Math.random()*8);
-    for(let i=0;i<pieces;i++){
-      const c = document.createElement('div');
-      c.className='confetti';
-      c.textContent = gold ? "💎" : (Math.random()<0.5 ? "✨" : "💎");
-      board.appendChild(c);
-      const ang = Math.random()*Math.PI*2;
-      const dist = 40 + Math.random()*60;
-      const tx = cx + Math.cos(ang)*dist, ty = cy + Math.sin(ang)*dist;
-      c.style.left = cx+'px'; c.style.top = cy+'px'; c.style.opacity='1';
-      c.animate([
-        { transform:'translate(0,0) scale(1)', opacity:1 },
-        { transform:`translate(${tx-cx}px, ${ty-cy}px) scale(${1+Math.random()*0.6})`, opacity:0 }
-      ], { duration: 600 + Math.random()*400, easing:'cubic-bezier(.17,.67,.35,1.2)'});
-      setTimeout(()=>c.remove(), 900);
+  function compatScore(pet, sitter){
+    let s=0;
+    if(sitter.species.includes(pet.species)) s+=5;
+    if(sitter.sizes.includes(pet.size)) s+=3;
+    if(sitter.temperFocus.includes(pet.temper)) s+=3;
+    // need mapping: "experienced with anxious pets" maps to "anxious pets"
+    const needKey = pet.need==='experienced with anxious pets' ? 'anxious pets' : pet.need;
+    if(sitter.skills.includes(needKey)) s+=6;
+    return s;
+  }
+
+  function bestSitterId(pet, sitters){
+    let top = -1, bestId=null;
+    for(const st of sitters){
+      const c = compatScore(pet, st);
+      if(c>top){ top=c; bestId = st.id }
     }
+    return bestId;
   }
 
-  function floatingText(txt, fromEl){
-    const r = fromEl.getBoundingClientRect(), bd = board.getBoundingClientRect();
-    const fx = r.left - bd.left + r.width/2, fy = r.top - bd.top;
-    const t = document.createElement('div');
-    t.className='confetti'; t.style.fontSize='20px'; t.textContent = txt;
-    t.style.left = fx+'px'; t.style.top = fy+'px';
-    board.appendChild(t);
-    t.animate([{transform:'translate(-50%,-10px)',opacity:0},{transform:'translate(-50%,-40px)',opacity:1},{transform:'translate(-50%,-70px)',opacity:0}],{duration:900,easing:'ease-out'});
-    setTimeout(()=>t.remove(), 900);
+  // ---------- Rendering ----------
+  const $level = document.getElementById('level');
+  const $score = document.getElementById('score');
+  const $time  = document.getElementById('time');
+  const $lives = document.getElementById('lives');
+  const $queue = document.getElementById('queue');
+  const $sitters = document.getElementById('sitters');
+  const $drop = document.getElementById('drop');
+  const $flash = document.getElementById('flash');
+
+  function renderHUD(){
+    $level.textContent = state.level;
+    $score.textContent = state.score;
+    $time.textContent = Math.ceil(state.timeLeft);
+    $lives.textContent = '❤'.repeat(state.lives) + '♡'.repeat(Math.max(0,3-state.lives));
   }
 
-  function gameTick(){
-    for(const f of floaters){
-      let x = parseFloat(f.el.style.left), y = parseFloat(f.el.style.top);
-      f.t += f.sway;
-      x += f.vx + Math.cos(f.t)*0.22*baseSpeed;
-      y += f.vy + Math.sin(f.t*0.9)*0.22*baseSpeed;
-      if(x<0 || x>W-100) f.vx *= -1;
-      if(y<0 || y>H-70)  f.vy *= -1;
-      f.el.style.left = clamp(x, 2, W-100)+'px';
-      f.el.style.top  = clamp(y, 2, H-70)+'px';
-    }
-  }
-
-  function start(){
-    running = true; score=0; collected=0; combo=1; bestCombo=1; lastCollectAt=0; updateComboHUD(); setDouble(false);
-    scoreEl.textContent=score; collectedEl.textContent=collected;
-    endOv.classList.remove('show'); lbOv.classList.remove('show'); startOv.classList.remove('show');
-    floaters.forEach(f=>f.el.remove()); floaters=[];
-    for(let i=0;i<6;i++) spawnEntity('pet');
-    for(let i=0;i<4;i++) spawnEntity('sitter');
-
-    clearInterval(spawnInt); clearInterval(tickInt); clearInterval(bonusInt);
-    spawnInt = setInterval(()=>{ if(!running) return; spawnEntity(Math.random()<0.55 ? 'pet' : 'sitter'); }, spawnEvery);
-    tickInt = setInterval(()=>{ if(!running) return; timer--; timeEl.textContent = timer; if(timer<=0) end(); }, 1000);
-    // bonus co ~15–22s
-    bonusInt = setInterval(()=>{ if(!running) return; spawnEntity('bonus'); }, 15000 + Math.floor(Math.random()*7000));
-
-    (function raf(){ if(!running) return; gameTick(); requestAnimationFrame(raf); })();
-  }
-
-  function end(){
-    running=false; clearInterval(spawnInt); clearInterval(tickInt); clearInterval(bonusInt);
-    finalScore.textContent = score; finalCollected.textContent = collected; finalCombo.textContent = comboMultiplier();
-    endOv.classList.add('show');
-  }
-
-  // Ranking (localStorage)
-  const KEY='ah_leaderboard_v2';
-  function getLB(){ try{ return JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ return [] } }
-  function setLB(list){ localStorage.setItem(KEY, JSON.stringify(list.slice(0,10))); }
-  function addToLB(name, score, diff, combo){
-    const list = getLB();
-    list.push({name:name||'Anon', score, diff, combo, date:new Date().toISOString().slice(0,10)});
-    list.sort((a,b)=>b.score-a.score);
-    setLB(list);
-  }
-  function renderLB(){
-    const list = getLB();
-    lbTableBody.innerHTML = '';
-    if(list.length===0){
-      const tr=document.createElement('tr'); const td=document.createElement('td');
-      td.colSpan=6; td.textContent='Brak wyników. Zagraj rundę i zapisz wynik!'; td.style.opacity='.8';
-      tr.appendChild(td); lbTableBody.appendChild(tr); return;
-    }
-    list.forEach((r,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${escapeHTML(r.name)}</td><td>${r.score}</td><td>${r.diff}</td><td>${r.combo}×</td><td>${r.date}</td>`;
-      lbTableBody.appendChild(tr);
+  function renderPetCard(){
+    const p = state.currentPet;
+    document.getElementById('petEmoji').textContent = p.emoji;
+    document.getElementById('petTitle').textContent = `${p.species} — ${p.size}, ${p.temper}`;
+    document.getElementById('petNeed').textContent = `Needs: ${p.need}`;
+    const tags = document.getElementById('petTags');
+    tags.innerHTML = '';
+    [p.species, p.size, p.temper, p.need].forEach(t=>{
+      const span = document.createElement('span'); span.className='tag'; span.textContent=t; tags.appendChild(span);
     });
   }
-  function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function renderQueue(){
+    $queue.innerHTML='';
+    state.queue.forEach((p, i)=>{
+      const d=document.createElement('div');
+      d.className='mini'+(i===0?' active':'');
+      d.textContent=p.emoji;
+      $queue.appendChild(d);
+    });
+  }
+  function tag(text){ const s=document.createElement('span'); s.className='tag'; s.textContent=text; return s; }
 
-  // Handlery
-  startBtn.addEventListener('click', ()=>{ applyLevel(chosen); start(); });
-  playAgainBtn.addEventListener('click', ()=>{ start(); });
-  shareBtn.addEventListener('click', async ()=>{
-    const text = `Gram w Animalhotels: Smile & Match — wynik ${score} (poziom ${difficulty}), max combo ${comboMultiplier()}×, zebrane ${collected}! 😄`;
-    if(navigator.share){ try{ await navigator.share({title:'Animalhotels: Smile & Match', text}); }catch(e){} }
-    else { try{ await navigator.clipboard.writeText(text); shareBtn.textContent='Skopiowano!'; setTimeout(()=>shareBtn.textContent='Udostępnij wynik',1400);}catch(e){} }
+  function renderSitters(){
+    $sitters.innerHTML='';
+    state.sitters.forEach(st=>{
+      const el = document.createElement('article');
+      el.className='sitter card'; el.dataset.id=st.id; el.setAttribute('aria-grabbed','false'); el.setAttribute('role','button');
+      el.innerHTML = `
+        <div class="avatar" aria-hidden="true">${st.avatar}</div>
+        <div>
+          <h4>${st.name} • ⭐ ${st.rating}</h4>
+          <div class="scoreline">Fit score shown after drop</div>
+          <div class="suit"></div>
+        </div>`;
+      const suit = el.querySelector('.suit');
+      [...st.species].slice(0,2).forEach(x=>suit.appendChild(tag(x)));
+      [...st.sizes].slice(0,2).forEach(x=>suit.appendChild(tag(x)));
+      suit.appendChild(tag(st.temperFocus[0]));
+      suit.appendChild(tag(st.skills[0]));
+      enableDrag(el);
+      $sitters.appendChild(el);
+    });
+  }
+
+  // ---------- Drag (pointer events for mobile) ----------
+  let dragging=null, ghost=null;
+
+  function enableDrag(el){
+    el.addEventListener('pointerdown', e=>{
+      if(!state.running) return;
+      dragging = el;
+      el.classList.add('dragging');
+      el.setPointerCapture(e.pointerId);
+      ghost = el.cloneNode(true);
+      ghost.classList.add('floating');
+      ghost.style.width = el.getBoundingClientRect().width+'px';
+      document.body.appendChild(ghost);
+      moveGhost(e.clientX, e.clientY);
+      $drop.classList.add('ready');
+    });
+    el.addEventListener('pointermove', e=>{
+      if(!dragging || e.buttons===0) return;
+      moveGhost(e.clientX, e.clientY);
+    });
+    el.addEventListener('pointerup', e=>{
+      if(!dragging) return;
+      const hit = isOverDrop(e.clientX, e.clientY);
+      finishDrag(dragging, hit);
+      cleanupDrag(el);
+    });
+    el.addEventListener('pointercancel', ()=> cleanupDrag(el));
+  }
+  function moveGhost(x,y){
+    const g = ghost;
+    g.style.transform = `translate(${x - g.offsetWidth/2}px, ${y - g.offsetHeight/2}px)`;
+  }
+  function isOverDrop(x,y){
+    const r = document.getElementById('phone').getBoundingClientRect();
+    const inner = document.querySelector('.app').getBoundingClientRect();
+    return x>inner.left && x<inner.right && y>inner.top && y<inner.bottom;
+  }
+  function cleanupDrag(el){
+    if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    ghost=null;
+    if(el){ el.classList.remove('dragging'); el.releasePointerCapture?.(event?.pointerId) }
+    dragging=null;
+    $drop.classList.remove('ready');
+  }
+
+  function finishDrag(el, dropped){
+    const st = state.sitters.find(s=>s.id===el.dataset.id);
+    const pet = state.currentPet;
+    const fit = compatScore(pet, st);
+
+    el.querySelector('.scoreline').textContent = `Fit score: ${fit}`;
+    if(dropped){
+      if(st.id === state.bestId){
+        feedback(true);
+        award(true);
+      } else {
+        feedback(false);
+        award(false);
+      }
+      nextRound();
+    }
+  }
+
+  // ---------- Game flow ----------
+  function feedback(ok){
+    $flash.className = 'flash ' + (ok?'ok':'bad') + ' show';
+    setTimeout(()=> $flash.classList.remove('show'), 350);
+  }
+  function award(ok){
+    if(ok){
+      const gain = TUNE[state.difficulty].reward + (state.level-1)*2;
+      state.score += gain;
+      state.xpThisLevel += gain;
+      if(state.xpThisLevel >= state.levelGoal){
+        state.level++; state.xpThisLevel = 0;
+      }
+    } else {
+      state.lives--;
+      state.timeLeft = Math.max(4, state.timeLeft - 2);
+      if(state.lives<=0){ return endGame() }
+    }
+    renderHUD();
+  }
+
+  function nextRound(){
+    if(state.queue.length===0) refillQueue();
+    state.currentPet = state.queue.shift();
+    renderPetCard(); renderQueue();
+
+    // build sitter options for this pet
+    const opts = TUNE[state.difficulty].options + Math.min(state.level-1, TUNE[state.difficulty].decoys);
+    state.sitters = makeSitterPool(state.currentPet, opts);
+    state.bestId = bestSitterId(state.currentPet, state.sitters);
+    renderSitters();
+
+    // reset / refresh timer
+    state.timeLeft = timeForLevel();
+  }
+
+  function refillQueue(){
+    state.queue = Array.from({length:5}, ()=> makePet());
+  }
+
+  function tick(){
+    if(!state.running) return;
+    state.timeLeft -= 0.1;
+    if(state.timeLeft<=0){
+      state.timeLeft = 0;
+      state.lives--;
+      renderHUD();
+      feedback(false);
+      if(state.lives<=0) return endGame();
+      nextRound();
+    }
+    renderHUD();
+  }
+
+  function startGame(){
+    state.running=true;
+    state.level=1; state.score=0; state.lives=3; state.xpThisLevel=0;
+    refillQueue();
+    nextRound();
+    if(state.timerId) clearInterval(state.timerId);
+    state.timerId = setInterval(tick, 100);
+  }
+
+  function endGame(){
+    state.running=false;
+    clearInterval(state.timerId);
+    const stats = `You reached level ${state.level} with ${state.score} XP.`;
+    document.getElementById('finalStats').textContent = stats;
+    showBoard('board2');
+    document.getElementById('gameOver').classList.add('show');
+  }
+
+  // ---------- Local leaderboard ----------
+  function getBoard(){
+    try{ return JSON.parse(localStorage.getItem('ah_board')||'[]') } catch(e){ return [] }
+  }
+  function saveBoard(list){ localStorage.setItem('ah_board', JSON.stringify(list.slice(0,10))) }
+  function addScore(name, score){
+    const list = getBoard();
+    list.push({name:name||'Player', score, date: new Date().toISOString().slice(0,10)});
+    list.sort((a,b)=> b.score - a.score);
+    saveBoard(list);
+  }
+  function showBoard(elId){
+    const list = getBoard();
+    const el = document.getElementById(elId);
+    el.innerHTML = list.length? '' : '<li>No scores yet</li>';
+    list.slice(0,10).forEach(({name, score, date})=>{
+      const li = document.createElement('li');
+      li.textContent = `${name} — ${score} XP (${date})`;
+      el.appendChild(li);
+    });
+  }
+
+  // ---------- UI wiring ----------
+  const startOverlay = document.getElementById('startOverlay');
+  const howOverlay = document.getElementById('howOverlay');
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    showBoard('board'); startOverlay.classList.add('show');
   });
-  saveScoreBtn.addEventListener('click', ()=>{
-    addToLB(nameInput.value.trim(), Number(finalScore.textContent), difficulty, Number(finalCombo.textContent));
-    nameInput.value=''; renderLB(); lbOv.classList.add('show');
+  document.getElementById('howBtn').addEventListener('click', ()=> howOverlay.classList.add('show'));
+  document.getElementById('closeHow').addEventListener('click', ()=> howOverlay.classList.remove('show'));
+
+  document.getElementById('startGame').addEventListener('click', ()=>{
+    startOverlay.classList.remove('show');
+    startGame();
   });
-  viewLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
-  openLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
-  showLB.addEventListener('click', ()=>{ renderLB(); lbOv.classList.add('show'); });
-  lbClose.addEventListener('click', ()=> lbOv.classList.remove('show'));
-  lbClear.addEventListener('click', ()=>{
-    if(confirm('Wyczyścić lokalny ranking?')){ localStorage.removeItem(KEY); renderLB(); }
+  document.getElementById('again').addEventListener('click', ()=>{
+    document.getElementById('gameOver').classList.remove('show');
+    startGame();
   });
-  muteBtn.addEventListener('click', ()=>{
-    muted = !muted;
-    muteBtn.textContent = muted ? '🔇 Wyciszone' : '🔊 Dźwięk';
-    muteBtn.classList.toggle('muted', muted);
-  });
-  skinBtn.addEventListener('click', ()=>{
-    const neon = gameRoot.classList.toggle('skin-neon');
-    skinBtn.textContent = neon ? '🎨 Motyw: Neon' : '🎨 Motyw: Classic';
+  document.getElementById('saveScore').addEventListener('click', ()=>{
+    addScore(document.getElementById('playerName').value.trim(), state.score);
+    showBoard('board2');
   });
 
-  // odblokowanie AudioContext
-  window.addEventListener('pointerdown', ()=>{ try{ ensureAudio(); audioCtx.resume && audioCtx.resume(); }catch(e){} }, {once:true});
+  // Difficulty buttons
+  startOverlay.querySelectorAll('[data-diff]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      startOverlay.querySelectorAll('[data-diff]').forEach(b=> b.classList.remove('active'));
+      btn.classList.add('active');
+      state.difficulty = btn.dataset.diff;
+    });
+  });
 
-  // pętla animacji
-  (function raf(){ if(running) gameTick(); requestAnimationFrame(raf); })();
+  // Keyboard quick restart (desktop)
+  window.addEventListener('keydown', (e)=>{
+    if(e.key===' ' && !state.running){ startGame() }
+  });
 
-  // utils
-  function pointFromEvent(e){ if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY}; return {x:e.clientX, y:e.clientY}; }
-
-  // start overlay opis
-  updateComboHUD();
+  // Initial
+  renderHUD(); renderQueue(); showBoard('board'); startOverlay.classList.add('show');
 })();
 </script>
 </body>
