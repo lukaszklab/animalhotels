@@ -1,9 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="pl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Animalhotels: Smile & Match — Combos + Bonusy + Skins</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<title>Animalhotels: Smile &amp; Match — Combos + Bonusy + Skins</title>
 <style>
   :root{
     --bg:#0f172a; --card:#111827; --brand:#22d3ee; --brand2:#a78bfa; --good:#22c55e; --text:#e5e7eb;
@@ -137,96 +138,89 @@
 </style>
 </head>
 <body>
-  <div class="game" id="game">
-    <header>
-      <div class="diamond" aria-hidden="true"></div>
-      <div class="title">Animalhotels: Smile & Match</div>
-      <div class="stats">
-        <div class="pill">⏱️ <span id="time">60</span>s</div>
-        <div class="pill">✨ Punkty: <span id="score">0</span></div>
-        <div class="pill">📦 Zebrano: <span id="collected">0</span></div>
-        <div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
-      </div>
-      <div class="ctrls">
-        <button class="btn" id="skinBtn">🎨 Motyw</button>
-        <button class="btn" id="muteBtn">🔊 Dźwięk</button>
-        <button class="btn" id="showLB">🏆 Ranking</button>
-      </div>
-    </header>
-
-    <div class="hud">
-      <div class="badge combo" id="comboBadge">Combo x1</div>
-      <div class="badge double" id="doubleBadge" style="display:none;">×2 punkty: <span id="doubleLeft">0</span>s</div>
-    </div>
-
-    <div id="board">
-      <div class="phone" id="dropZone" aria-label="Aplikacja Animalhotels – upuść tutaj">
-        <div class="logo">
-          <div class="diamond" aria-hidden="true"></div>
-          <h2>Animalhotels</h2>
-          <p>Przeciągaj petsitterów i pupile tutaj</p>
-        </div>
-        <div class="drop-hint">Upuść w obrębie telefonu</div>
-      </div>
-    </div>
-
-    <!-- START -->
-    <div class="overlay show" id="startOv">
-      <div class="card">
-        <h3>Wybierz tryb i startuj!</h3>
-        <p>Zbieraj uśmiechniętych petsitterów i szczęśliwe zwierzaki. Łap bonusy 💎, buduj combo 🔥.</p>
-        <div class="row">
-          <div class="select" id="levelSel">
-            <div class="chip active" data-id="easy">Łatwy</div>
-            <div class="chip" data-id="normal">Normalny</div>
-            <div class="chip" data-id="hard">Trudny</div>
-          </div>
-        </div>
-        <p class="muted" id="levelDesc">Łatwy: 75s, wolniejsze ruchy, więcej czasu.</p>
-        <div class="btns">
-          <button id="startBtn">Start</button>
-          <button class="secondary" id="viewLB">Zobacz ranking</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- KONIEC -->
-    <div class="overlay" id="endOv">
-      <div class="card">
-        <h3>📣 Koniec czasu!</h3>
-        <p>Wynik: <b><span id="finalScore">0</span></b> | Zebrano: <b><span id="finalCollected">0</span></b> | Max combo: <b><span id="finalCombo">1</span>×</b></p>
-        <div style="margin:8px 0 12px 0;">
-          <input id="nameInput" maxlength="12" placeholder="Twoje imię/nick" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text)">
-          <button id="saveScore">Zapisz do rankingu</button>
-        </div>
-        <div class="btns">
-          <button id="playAgain">Zagraj jeszcze raz</button>
-          <button class="secondary" id="openLB">Pokaż ranking</button>
-          <button class="secondary" id="share">Udostępnij wynik</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RANKING -->
-    <div class="overlay" id="lbOv">
-      <div class="card">
-        <h3>🏆 Ranking Animalhotels</h3>
-        <table class="leadertable" id="lbTable">
-          <thead><tr><th>#</th><th>Nick</th><th>Wynik</th><th>Poziom</th><th>Max combo</th><th>Data</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="btns">
-          <button id="lbClose">Zamknij</button>
-          <button class="secondary" id="lbClear">Wyczyść ranking</button>
-        </div>
-      </div>
-    </div>
-
-    <footer class="help">
+<div class="game" id="game">
+<header>
+<div aria-hidden="true" class="diamond"></div>
+<div class="title">Animalhotels: Smile &amp; Match</div>
+<div class="stats">
+<div class="pill">⏱️ <span id="time">60</span>s</div>
+<div class="pill">✨ Punkty: <span id="score">0</span></div>
+<div class="pill">📦 Zebrano: <span id="collected">0</span></div>
+<div class="pill">🎯 Poziom: <span id="lvl">Normalny</span></div>
+</div>
+<div class="ctrls">
+<button class="btn" id="skinBtn">🎨 Motyw</button>
+<button class="btn" id="muteBtn">🔊 Dźwięk</button>
+<button class="btn" id="showLB">🏆 Ranking</button>
+</div>
+</header>
+<div class="hud" style="; position: fixed; bottom: 0; top: auto; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.2em; padding: 8px; background: rgba(0,0,0,0.5); z-index: 9999;">
+<div class="badge combo" id="comboBadge" style="; font-size: 1.4em; margin: 0 10px;">Combo x1</div>
+<div class="badge double" id="doubleBadge" style="display:none;; font-size: 1.4em; margin: 0 10px;">×2 punkty: <span id="doubleLeft">0</span>s</div>
+</div>
+<div id="board">
+<div aria-label="Aplikacja Animalhotels – upuść tutaj" class="phone" id="dropZone">
+<div class="logo">
+<div aria-hidden="true" class="diamond"></div>
+<h2>Animalhotels</h2>
+<p>Przeciągaj petsitterów i pupile tutaj</p>
+</div>
+<div class="drop-hint">Upuść w obrębie telefonu</div>
+</div>
+</div>
+<!-- START -->
+<div class="overlay show" id="startOv">
+<div class="card">
+<h3>Wybierz tryb i startuj!</h3>
+<p>Zbieraj uśmiechniętych petsitterów i szczęśliwe zwierzaki. Łap bonusy 💎, buduj combo 🔥.</p>
+<div class="row">
+<div class="select" id="levelSel">
+<div class="chip active" data-id="easy">Łatwy</div>
+<div class="chip" data-id="normal">Normalny</div>
+<div class="chip" data-id="hard">Trudny</div>
+</div>
+</div>
+<p class="muted" id="levelDesc">Łatwy: 75s, wolniejsze ruchy, więcej czasu.</p>
+<div class="btns">
+<button id="startBtn">Start</button>
+<button class="secondary" id="viewLB">Zobacz ranking</button>
+</div>
+</div>
+</div>
+<!-- KONIEC -->
+<div class="overlay" id="endOv">
+<div class="card">
+<h3>📣 Koniec czasu!</h3>
+<p>Wynik: <b><span id="finalScore">0</span></b> | Zebrano: <b><span id="finalCollected">0</span></b> | Max combo: <b><span id="finalCombo">1</span>×</b></p>
+<div style="margin:8px 0 12px 0;">
+<input id="nameInput" maxlength="12" placeholder="Twoje imię/nick" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text)"/>
+<button id="saveScore">Zapisz do rankingu</button>
+</div>
+<div class="btns">
+<button id="playAgain">Zagraj jeszcze raz</button>
+<button class="secondary" id="openLB">Pokaż ranking</button>
+<button class="secondary" id="share">Udostępnij wynik</button>
+</div>
+</div>
+</div>
+<!-- RANKING -->
+<div class="overlay" id="lbOv">
+<div class="card">
+<h3>🏆 Ranking Animalhotels</h3>
+<table class="leadertable" id="lbTable">
+<thead><tr><th>#</th><th>Nick</th><th>Wynik</th><th>Poziom</th><th>Max combo</th><th>Data</th></tr></thead>
+<tbody></tbody>
+</table>
+<div class="btns">
+<button id="lbClose">Zamknij</button>
+<button class="secondary" id="lbClear">Wyczyść ranking</button>
+</div>
+</div>
+</div>
+<footer class="help">
       Sterowanie: przeciągaj elementy myszką lub palcem do telefonu. Różne zwierzęta mają różną wartość. Zbieraj 💎 Diamond Token, żeby przez chwilę mieć ×2 punkty. Utrzymuj szybkie tempo, by rosnął mnożnik combo.
     </footer>
-  </div>
-
+</div>
 <script>
 (() => {
   const gameRoot = document.body;
