@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Animalhotels: Smile & Match — Combos + Bonusy + Skins</title>
 <style>
   :root{
@@ -89,6 +89,51 @@
     radial-gradient(800px 400px at 20% 10%, rgba(59,130,246,0.10), transparent 60%),
     radial-gradient(600px 300px at 80% 0%, rgba(168,85,247,0.10), transparent 60%),
     var(--card);}
+
+  /* ==== Mobile-friendly layout tweaks ==== */
+  * { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body { overflow: hidden; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  /* Use JS-provided --vh for reliable viewport height inside in-app browsers */
+  .game { width: min(1000px, 100vw); height: calc(var(--vh, 1vh) * 100); }
+  @supports (height: 100dvh) {
+    .game { height: 100dvh; }
+  }
+  @media (max-width: 768px) {
+    .game { width: 100vw; height: 100dvh; border-radius: 0; }
+    header { inset: calc(6px + env(safe-area-inset-top, 0px)) 8px auto 8px; padding: 6px 8px; gap: 6px; border-radius: 12px; }
+    .title { display: none; }
+    .stats { gap: 6px; }
+    .pill { padding: 4px 6px; font-size: 12px; }
+    /* Keep only time + score */
+    .stats .pill:nth-child(3), .stats .pill:nth-child(4) { display: none; }
+    .ctrls .btn { padding: 4px 6px; font-size: 12px; }
+    .hud { top: calc(8px + env(safe-area-inset-top, 0px)); }
+    .phone { width: min(300px, 78vw); height: min(520px, 74vh); }
+    .entity { font-size: 30px; padding: 8px 10px; }
+    .card { width: min(560px, 92vw); padding: 16px; }
+  }
+
+
+  /* ==== Ultra-compact header for small/short windows ==== */
+  .hud-hidden header { opacity: .12; pointer-events: none; transition: opacity .2s ease; }
+  header { transition: opacity .2s ease; }
+  @media (max-height: 700px), (max-width: 820px) {
+    header { inset: calc(6px + env(safe-area-inset-top, 0px)) 6px auto 6px; padding: 4px 6px; gap: 6px; border-radius: 10px; }
+    .title { display:none; }
+    .pill { padding: 3px 6px; font-size: 11px; }
+    .stats { gap: 6px; }
+    /* keep only Time & Score */
+    .stats .pill:nth-child(3), .stats .pill:nth-child(4) { display:none; }
+    .ctrls .btn { padding: 3px 6px; font-size: 11px; }
+  }
+  @media (max-height: 580px), (max-width: 520px) {
+    header { padding: 3px 5px; gap: 4px; border-radius: 10px; }
+    .pill { padding: 2px 5px; font-size: 10px; }
+    .ctrls { display:none; } /* hide buttons when very small */
+    .hud { top: calc(6px + env(safe-area-inset-top, 0px)); }
+  }
+
 </style>
 </head>
 <body>
@@ -217,8 +262,40 @@
   const skinBtn = document.getElementById('skinBtn');
 
   const comboBadge = document.getElementById('comboBadge');
+
+
+  // Reliable 100vh on mobile/in-app browsers — sets --vh to window.innerHeight * 1%
+  function setVH() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+  setVH();
+
   const doubleBadge = document.getElementById('doubleBadge');
   const doubleLeft = document.getElementById('doubleLeft');
+
+  // === Auto-hide header on idle & force ultra-compact on short windows ===
+  let hudHideTimer = null;
+  function scheduleHudHide(){
+    clearTimeout(hudHideTimer);
+    hudHideTimer = setTimeout(()=> document.body.classList.add('hud-hidden'), 2000);
+  }
+  function revealHud(){
+    document.body.classList.remove('hud-hidden');
+    scheduleHudHide();
+  }
+  function applyUltraCompact(){
+    const short = window.innerHeight < 700 || window.innerWidth < 820;
+    document.body.classList.toggle('ultra', short);
+  }
+  window.addEventListener('mousemove', (e)=>{ if(e.clientY < 100) revealHud(); });
+  window.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches[0].clientY < 120) revealHud(); }, {passive:true});
+  window.addEventListener('resize', applyUltraCompact);
+  applyUltraCompact();
+  scheduleHudHide();
+
 
   // Zwierzęta: punkty zależne od gatunku
   const PETS = [
@@ -298,6 +375,14 @@
   function power(){ beep(520,0.06,0.07,'sawtooth'); setTimeout(()=>beep(680,0.07,0.06,'square'),70); }
 
   function size(){ const r=board.getBoundingClientRect(); W=r.width; H=r.height; }
+
+  function setCompactIfNeeded(){
+    const compact = window.matchMedia('(max-width: 420px)').matches;
+    document.body.classList.toggle('compact', compact);
+  }
+  setCompactIfNeeded();
+  window.addEventListener('resize', setCompactIfNeeded);
+
   window.addEventListener('resize', size); size();
   function rnd(min, max){ return Math.random()*(max-min)+min; }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
